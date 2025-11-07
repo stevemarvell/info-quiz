@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   IonContent,
   IonHeader,
@@ -6,127 +7,97 @@ import {
   IonTitle,
   IonToolbar,
   IonButton,
-  IonInput,
-  IonTextarea,
-  IonItem,
-  IonLabel,
-  IonList,
+  IonButtons,
+  IonBackButton,
   IonCard,
   IonCardHeader,
   IonCardTitle,
   IonCardContent,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonTextarea,
   IonIcon,
-  IonGrid,
-  IonRow,
-  IonCol,
-  IonButtons,
-  IonBackButton,
-  IonRange
+  IonRange,
+  IonNote
 } from '@ionic/react';
 import { add, trash } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import { Quiz, QuizSchema } from '@quiz-app/shared';
 import { api } from '../services/api';
-import { Quiz, Metric, Question, Answer, MetricScore } from '../types';
+import { FormField } from '../components/FormField';
 
 const AdminQuizCreate: React.FC = () => {
   const history = useHistory();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [metrics, setMetrics] = useState<Metric[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting }
+  } = useForm<Quiz>({
+    resolver: zodResolver(QuizSchema),
+    defaultValues: {
+      id: `quiz-${Date.now()}`,
+      title: '',
+      description: '',
+      metrics: [],
+      questions: []
+    }
+  });
+
+  const {
+    fields: metrics,
+    append: appendMetric,
+    remove: removeMetric
+  } = useFieldArray({ control, name: 'metrics' });
+
+  const {
+    fields: questions,
+    append: appendQuestion,
+    remove: removeQuestion
+  } = useFieldArray({ control, name: 'questions' });
+
+  const watchedMetrics = watch('metrics');
+  const watchedQuestions = watch('questions');
 
   const addMetric = () => {
-    const newMetric: Metric = {
-      id: `metric-${Date.now()}`,
-      name: '',
-      description: ''
-    };
-    setMetrics([...metrics, newMetric]);
-  };
-
-  const updateMetric = (index: number, field: keyof Metric, value: string) => {
-    const updated = [...metrics];
-    updated[index] = { ...updated[index], [field]: value };
-    setMetrics(updated);
-  };
-
-  const removeMetric = (index: number) => {
-    setMetrics(metrics.filter((_, i) => i !== index));
+    appendMetric({ id: `m-${Date.now()}`, name: '', description: '' });
   };
 
   const addQuestion = () => {
-    const newQuestion: Question = {
-      id: `q-${Date.now()}`,
-      text: '',
-      answers: []
-    };
-    setQuestions([...questions, newQuestion]);
-  };
-
-  const updateQuestion = (index: number, text: string) => {
-    const updated = [...questions];
-    updated[index] = { ...updated[index], text };
-    setQuestions(updated);
-  };
-
-  const removeQuestion = (index: number) => {
-    setQuestions(questions.filter((_, i) => i !== index));
+    appendQuestion({ id: `q-${Date.now()}`, text: '', answers: [] });
   };
 
   const addAnswer = (questionIndex: number) => {
-    const updated = [...questions];
-    const newAnswer: Answer = {
-      id: `a-${Date.now()}`,
-      text: '',
-      metricScores: metrics.map(m => ({ metricId: m.id, score: 0 }))
-    };
-    updated[questionIndex].answers.push(newAnswer);
-    setQuestions(updated);
-  };
-
-  const updateAnswer = (questionIndex: number, answerIndex: number, text: string) => {
-    const updated = [...questions];
-    updated[questionIndex].answers[answerIndex].text = text;
-    setQuestions(updated);
-  };
-
-  const updateAnswerMetricScore = (
-    questionIndex: number,
-    answerIndex: number,
-    metricId: string,
-    score: number
-  ) => {
-    const updated = [...questions];
-    const answer = updated[questionIndex].answers[answerIndex];
-    const scoreIndex = answer.metricScores.findIndex(ms => ms.metricId === metricId);
-    if (scoreIndex >= 0) {
-      answer.metricScores[scoreIndex].score = score;
-    }
-    setQuestions(updated);
+    const answers = watchedQuestions[questionIndex]?.answers || [];
+    setValue(`questions.${questionIndex}.answers`, [
+      ...answers,
+      {
+        id: `a-${Date.now()}`,
+        text: '',
+        metricScores: watchedMetrics.map(m => ({ metricId: m.id, score: 0 }))
+      }
+    ]);
   };
 
   const removeAnswer = (questionIndex: number, answerIndex: number) => {
-    const updated = [...questions];
-    updated[questionIndex].answers = updated[questionIndex].answers.filter(
-      (_, i) => i !== answerIndex
+    const answers = watchedQuestions[questionIndex]?.answers || [];
+    setValue(
+      `questions.${questionIndex}.answers`,
+      answers.filter((_, i) => i !== answerIndex)
     );
-    setQuestions(updated);
   };
 
-  const handleSave = async () => {
-    const quiz: Quiz = {
-      id: `quiz-${Date.now()}`,
-      title,
-      description,
-      metrics,
-      questions
-    };
-
+  const onSubmit = async (data: Quiz) => {
     try {
-      await api.createQuiz(quiz);
+      await api.createQuiz(data);
       history.push('/admin');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating quiz:', error);
+      alert(error.response?.data?.message || 'Failed to create quiz');
     }
   };
 
@@ -139,185 +110,189 @@ const AdminQuizCreate: React.FC = () => {
           </IonButtons>
           <IonTitle>Create Quiz</IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={handleSave}>Save</IonButton>
+            <IonButton onClick={handleSubmit(onSubmit)} disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save'}
+            </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
+
       <IonContent fullscreen>
-        <div style={{ padding: '1rem' }}>
+        <form style={{ padding: '1rem' }}>
+          {/* Quiz Details */}
           <IonCard>
             <IonCardHeader>
               <IonCardTitle>Quiz Details</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <IonItem>
-                <IonLabel position="stacked">Title</IonLabel>
-                <IonInput
-                  value={title}
-                  onIonChange={e => setTitle(e.detail.value!)}
-                  placeholder="Enter quiz title"
-                />
-              </IonItem>
-              <IonItem>
-                <IonLabel position="stacked">Description</IonLabel>
-                <IonTextarea
-                  value={description}
-                  onIonChange={e => setDescription(e.detail.value!)}
-                  placeholder="Enter quiz description"
-                  rows={3}
-                />
-              </IonItem>
+              <FormField
+                label="Title"
+                name="title"
+                register={register}
+                error={errors.title}
+                placeholder="Enter quiz title"
+                required
+              />
+              <FormField
+                label="Description"
+                name="description"
+                register={register}
+                error={errors.description}
+                placeholder="Enter quiz description"
+                multiline
+                rows={3}
+              />
             </IonCardContent>
           </IonCard>
 
+          {/* Metrics */}
           <IonCard>
             <IonCardHeader>
               <IonCardTitle>
                 Metrics
                 <IonButton onClick={addMetric} size="small" style={{ float: 'right' }}>
-                  <IonIcon icon={add} />
-                  Add Metric
+                  <IonIcon icon={add} /> Add
                 </IonButton>
               </IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              {metrics.length === 0 ? (
-                <p>No metrics added yet</p>
-              ) : (
-                metrics.map((metric, index) => (
-                  <IonCard key={metric.id}>
-                    <IonCardContent>
-                      <IonItem>
-                        <IonLabel position="stacked">Metric Name</IonLabel>
-                        <IonInput
-                          value={metric.name}
-                          onIonChange={e => updateMetric(index, 'name', e.detail.value!)}
-                          placeholder="e.g., Physical Health"
-                        />
-                      </IonItem>
-                      <IonItem>
-                        <IonLabel position="stacked">Description</IonLabel>
-                        <IonInput
-                          value={metric.description}
-                          onIonChange={e => updateMetric(index, 'description', e.detail.value!)}
-                          placeholder="Brief description"
-                        />
-                      </IonItem>
-                      <IonButton
-                        color="danger"
-                        size="small"
-                        onClick={() => removeMetric(index)}
-                      >
-                        <IonIcon icon={trash} />
-                        Remove
-                      </IonButton>
-                    </IonCardContent>
-                  </IonCard>
-                ))
+              {metrics.length === 0 && <p>Add at least one metric</p>}
+              {metrics.map((metric, index) => (
+                <IonCard key={metric.id}>
+                  <IonCardContent>
+                    <IonItem>
+                      <IonLabel position="stacked">Metric Name *</IonLabel>
+                      <IonInput
+                        {...register(`metrics.${index}.name`)}
+                        placeholder="e.g., Physical Health"
+                      />
+                    </IonItem>
+                    {errors.metrics?.[index]?.name && (
+                      <IonNote color="danger">{errors.metrics[index]?.name?.message}</IonNote>
+                    )}
+                    <IonItem>
+                      <IonLabel position="stacked">Description</IonLabel>
+                      <IonInput {...register(`metrics.${index}.description`)} />
+                    </IonItem>
+                    <IonButton color="danger" size="small" onClick={() => removeMetric(index)}>
+                      <IonIcon icon={trash} /> Remove
+                    </IonButton>
+                  </IonCardContent>
+                </IonCard>
+              ))}
+              {errors.metrics && typeof errors.metrics === 'object' && !Array.isArray(errors.metrics) && (
+                <IonNote color="danger">{(errors.metrics as any).message}</IonNote>
               )}
             </IonCardContent>
           </IonCard>
 
+          {/* Questions */}
           <IonCard>
             <IonCardHeader>
               <IonCardTitle>
                 Questions
-                <IonButton onClick={addQuestion} size="small" style={{ float: 'right' }}>
-                  <IonIcon icon={add} />
-                  Add Question
+                <IonButton
+                  onClick={addQuestion}
+                  size="small"
+                  style={{ float: 'right' }}
+                  disabled={metrics.length === 0}
+                >
+                  <IonIcon icon={add} /> Add
                 </IonButton>
               </IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              {questions.length === 0 ? (
-                <p>No questions added yet</p>
-              ) : (
-                questions.map((question, qIndex) => (
-                  <IonCard key={question.id}>
-                    <IonCardHeader>
-                      <IonCardTitle>Question {qIndex + 1}</IonCardTitle>
-                    </IonCardHeader>
-                    <IonCardContent>
-                      <IonItem>
-                        <IonLabel position="stacked">Question Text</IonLabel>
-                        <IonTextarea
-                          value={question.text}
-                          onIonChange={e => updateQuestion(qIndex, e.detail.value!)}
-                          placeholder="Enter your question"
-                        />
-                      </IonItem>
-                      <IonButton onClick={() => addAnswer(qIndex)} size="small">
-                        <IonIcon icon={add} />
-                        Add Answer
-                      </IonButton>
-                      <IonButton
-                        color="danger"
-                        size="small"
-                        onClick={() => removeQuestion(qIndex)}
-                      >
-                        <IonIcon icon={trash} />
-                        Remove Question
-                      </IonButton>
-
-                      {question.answers.map((answer, aIndex) => (
-                        <IonCard key={answer.id} style={{ marginTop: '1rem' }}>
-                          <IonCardContent>
-                            <IonItem>
-                              <IonLabel position="stacked">Answer Text</IonLabel>
-                              <IonInput
-                                value={answer.text}
-                                onIonChange={e =>
-                                  updateAnswer(qIndex, aIndex, e.detail.value!)
-                                }
-                                placeholder="Enter answer"
-                              />
-                            </IonItem>
-
-                            <h4 style={{ marginTop: '1rem' }}>Metric Scores (0-5)</h4>
-                            {metrics.map(metric => {
-                              const metricScore = answer.metricScores.find(
-                                ms => ms.metricId === metric.id
-                              );
-                              return (
-                                <IonItem key={metric.id}>
-                                  <IonLabel>
-                                    {metric.name}: {metricScore?.score || 0}
-                                  </IonLabel>
-                                  <IonRange
-                                    min={0}
-                                    max={5}
-                                    value={metricScore?.score || 0}
-                                    onIonChange={e =>
-                                      updateAnswerMetricScore(
-                                        qIndex,
-                                        aIndex,
-                                        metric.id,
-                                        e.detail.value as number
-                                      )
-                                    }
-                                  />
-                                </IonItem>
-                              );
-                            })}
-
-                            <IonButton
-                              color="danger"
-                              size="small"
-                              onClick={() => removeAnswer(qIndex, aIndex)}
-                            >
-                              <IonIcon icon={trash} />
-                              Remove Answer
-                            </IonButton>
-                          </IonCardContent>
-                        </IonCard>
-                      ))}
-                    </IonCardContent>
-                  </IonCard>
-                ))
+              {metrics.length === 0 && (
+                <IonNote color="warning">Add metrics first</IonNote>
               )}
+              {questions.map((question, qIndex) => (
+                <IonCard key={question.id}>
+                  <IonCardHeader>
+                    <IonCardTitle>Question {qIndex + 1}</IonCardTitle>
+                  </IonCardHeader>
+                  <IonCardContent>
+                    <IonItem>
+                      <IonLabel position="stacked">Question Text *</IonLabel>
+                      <IonTextarea {...register(`questions.${qIndex}.text`)} />
+                    </IonItem>
+                    {errors.questions?.[qIndex]?.text && (
+                      <IonNote color="danger">{errors.questions[qIndex]?.text?.message}</IonNote>
+                    )}
+
+                    <div style={{ marginTop: '1rem' }}>
+                      <IonButton onClick={() => addAnswer(qIndex)} size="small">
+                        <IonIcon icon={add} /> Add Answer
+                      </IonButton>
+                      <IonButton color="danger" size="small" onClick={() => removeQuestion(qIndex)}>
+                        <IonIcon icon={trash} /> Remove Question
+                      </IonButton>
+                    </div>
+
+                    {/* Answers */}
+                    {watchedQuestions[qIndex]?.answers?.map((answer, aIndex) => (
+                      <IonCard key={answer.id} style={{ marginTop: '1rem' }}>
+                        <IonCardContent>
+                          <IonItem>
+                            <IonLabel position="stacked">Answer Text *</IonLabel>
+                            <IonInput
+                              {...register(`questions.${qIndex}.answers.${aIndex}.text`)}
+                            />
+                          </IonItem>
+                          {errors.questions?.[qIndex]?.answers?.[aIndex]?.text && (
+                            <IonNote color="danger">
+                              {errors.questions[qIndex]?.answers?.[aIndex]?.text?.message}
+                            </IonNote>
+                          )}
+
+                          <h4 style={{ marginTop: '1rem' }}>Metric Scores (0-5)</h4>
+                          {watchedMetrics.map((metric, mIndex) => {
+                            const score =
+                              watchedQuestions[qIndex]?.answers?.[aIndex]?.metricScores?.find(
+                                ms => ms.metricId === metric.id
+                              )?.score || 0;
+
+                            return (
+                              <IonItem key={metric.id}>
+                                <IonLabel>{metric.name}: {score}</IonLabel>
+                                <IonRange
+                                  min={0}
+                                  max={5}
+                                  value={score}
+                                  onIonChange={(e) => {
+                                    const newScore = e.detail.value as number;
+                                    const scores = watchedQuestions[qIndex]?.answers?.[aIndex]?.metricScores || [];
+                                    const updatedScores = scores.map(ms =>
+                                      ms.metricId === metric.id ? { ...ms, score: newScore } : ms
+                                    );
+                                    setValue(
+                                      `questions.${qIndex}.answers.${aIndex}.metricScores`,
+                                      updatedScores
+                                    );
+                                  }}
+                                />
+                              </IonItem>
+                            );
+                          })}
+
+                          <IonButton
+                            color="danger"
+                            size="small"
+                            onClick={() => removeAnswer(qIndex, aIndex)}
+                          >
+                            <IonIcon icon={trash} /> Remove Answer
+                          </IonButton>
+                        </IonCardContent>
+                      </IonCard>
+                    ))}
+                    {errors.questions?.[qIndex]?.answers && (
+                      <IonNote color="danger">At least 2 answers required</IonNote>
+                    )}
+                  </IonCardContent>
+                </IonCard>
+              ))}
             </IonCardContent>
           </IonCard>
-        </div>
+        </form>
       </IonContent>
     </IonPage>
   );
