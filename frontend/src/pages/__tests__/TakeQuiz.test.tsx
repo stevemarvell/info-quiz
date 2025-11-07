@@ -3,10 +3,19 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import TakeQuiz from '../TakeQuiz';
-import * as api from '../../services/api';
+import { api } from '../../services/api';
 
 // Mock the API
-vi.mock('../../services/api');
+vi.mock('../../services/api', () => ({
+  api: {
+    getAllQuizzes: vi.fn(),
+    getQuiz: vi.fn(),
+    createQuiz: vi.fn(),
+    updateQuiz: vi.fn(),
+    deleteQuiz: vi.fn(),
+    submitQuiz: vi.fn(),
+  }
+}));
 
 const mockQuiz = {
   id: 'quiz-1',
@@ -126,7 +135,7 @@ describe('TakeQuiz Component', () => {
   it('should submit quiz and show results', async () => {
     const user = userEvent.setup();
     vi.mocked(api.getQuiz).mockResolvedValue(mockQuiz);
-    vi.mocked(api.submitQuizResponse).mockResolvedValue(mockResult);
+    vi.mocked(api.submitQuiz).mockResolvedValue(mockResult);
 
     render(
       <BrowserRouter>
@@ -162,7 +171,7 @@ describe('TakeQuiz Component', () => {
 
     // Should navigate to results or show success
     await waitFor(() => {
-      expect(api.submitQuizResponse).toHaveBeenCalledWith('quiz-1', {
+      expect(api.submitQuiz).toHaveBeenCalledWith('quiz-1', {
         quizId: 'quiz-1',
         answers: [
           { questionId: 'q1', answerId: 'a1' },

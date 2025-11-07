@@ -2,10 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Home from '../Home';
-import * as api from '../../services/api';
+import { api } from '../../services/api';
 
 // Mock the API module
-vi.mock('../../services/api');
+vi.mock('../../services/api', () => ({
+  api: {
+    getAllQuizzes: vi.fn(),
+    getQuiz: vi.fn(),
+    createQuiz: vi.fn(),
+    updateQuiz: vi.fn(),
+    deleteQuiz: vi.fn(),
+    submitQuiz: vi.fn(),
+  }
+}));
 
 const mockQuizzes = [
   {
@@ -30,7 +39,7 @@ describe('Home Component', () => {
   });
 
   it('should render home page title', () => {
-    vi.spyOn(api, 'getQuizzes').mockResolvedValue(mockQuizzes);
+    vi.mocked(api.getAllQuizzes).mockResolvedValue(mockQuizzes);
 
     render(
       <BrowserRouter>
@@ -42,7 +51,7 @@ describe('Home Component', () => {
   });
 
   it('should display quizzes after loading', async () => {
-    vi.spyOn(api, 'getQuizzes').mockResolvedValue(mockQuizzes);
+    vi.mocked(api.getAllQuizzes).mockResolvedValue(mockQuizzes);
 
     render(
       <BrowserRouter>
@@ -56,7 +65,7 @@ describe('Home Component', () => {
   });
 
   it('should display empty state when no quizzes', async () => {
-    vi.spyOn(api, 'getQuizzes').mockResolvedValue([]);
+    vi.mocked(api.getAllQuizzes).mockResolvedValue([]);
 
     render(
       <BrowserRouter>
@@ -73,7 +82,7 @@ describe('Home Component', () => {
   });
 
   it('should handle API errors gracefully', async () => {
-    vi.spyOn(api, 'getQuizzes').mockRejectedValue(new Error('API Error'));
+    vi.mocked(api.getAllQuizzes).mockRejectedValue(new Error('API Error'));
 
     render(
       <BrowserRouter>
