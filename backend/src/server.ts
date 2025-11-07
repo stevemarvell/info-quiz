@@ -8,33 +8,60 @@ import { InMemoryQuizResponseRepository } from './repositories/InMemoryQuizRespo
 import { QuizService } from './services/QuizService';
 import { initializeSampleData } from './sampleData';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { sanitizeInput } from './middleware/sanitization';
 import { logger } from './utils/logger';
+import { env } from './config/env';
+import { RATE_LIMITS, TIMEOUTS, REQUEST_LIMITS } from './config/constants';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = env.PORT;
+const NODE_ENV = env.NODE_ENV;
 
 // Security middleware
 app.use(helmet());
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:8100',
+  origin: env.CORS_ORIGIN,
   credentials: true
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+// Tiered Rate Limiting (Issue 7)
+// General rate limit - more permissive for reads
+const generalLimiter = rateLimit({
+  windowMs: RATE_LIMITS.WINDOW_MS,
+  max: RATE_LIMITS.MAX_REQUESTS_GENERAL,
+  message: { success: false, error: 'TooManyRequests', message: 'Too many requests, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/api', limiter);
+
+// Stricter rate limit for write operations (POST, PUT, DELETE)
+const writeLimiter = rateLimit({
+  windowMs: RATE_LIMITS.WINDOW_MS,
+  max: RATE_LIMITS.MAX_REQUESTS_WRITE,
+  message: { success: false, error: 'TooManyRequests', message: 'Too many write requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.method === 'GET', // Only apply to non-GET requests
+});
+
+app.use('/api', generalLimiter);
+app.use('/api', writeLimiter);
 
 // Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: REQUEST_LIMITS.JSON_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: REQUEST_LIMITS.URL_ENCODED_LIMIT }));
+
+// Input sanitization to prevent XSS (Issue 5)
+app.use(sanitizeInput);
+
+// Request timeout configuration (Issue 11)
+app.use((req, res, next) => {
+  req.setTimeout(TIMEOUTS.REQUEST_TIMEOUT_MS);
+  res.setTimeout(TIMEOUTS.REQUEST_TIMEOUT_MS);
+  next();
+});
 
 // Request logging
 app.use((req, res, next) => {

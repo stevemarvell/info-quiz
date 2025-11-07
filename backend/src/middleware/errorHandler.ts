@@ -14,6 +14,25 @@ export class AppError extends Error {
   }
 }
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Sanitize error details for production
+const sanitizeDetails = (details: unknown): unknown => {
+  if (!isProduction) {
+    return details; // Show full details in development
+  }
+
+  // In production, only return safe, user-friendly information
+  if (Array.isArray(details)) {
+    return details.map(d => ({
+      field: d.field || d.path,
+      message: d.message
+    }));
+  }
+
+  return undefined; // Don't expose internal details in production
+};
+
 export const errorHandler = (
   err: Error,
   req: Request,
@@ -24,16 +43,22 @@ export const errorHandler = (
     error: err.message,
     stack: err.stack,
     path: req.path,
-    method: req.method
+    method: req.method,
+    body: req.body
   });
 
   if (err instanceof AppError) {
-    res.status(err.statusCode).json({
+    const response: any = {
       success: false,
       error: err.name,
-      message: err.message,
-      details: err.details
-    });
+      message: err.message
+    };
+
+    if (err.details) {
+      response.details = sanitizeDetails(err.details);
+    }
+
+    res.status(err.statusCode).json(response);
     return;
   }
 
@@ -42,16 +67,21 @@ export const errorHandler = (
       success: false,
       error: 'ValidationError',
       message: 'Request validation failed',
-      details: err.errors
+      details: sanitizeDetails(err.errors.map(e => ({
+        field: e.path.join('.'),
+        message: e.message
+      })))
     });
     return;
   }
 
-  // Default error
+  // Default error - never expose internal details
   res.status(500).json({
     success: false,
     error: 'InternalServerError',
-    message: 'An unexpected error occurred'
+    message: isProduction
+      ? 'An unexpected error occurred'
+      : err.message
   });
 };
 

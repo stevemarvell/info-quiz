@@ -3,6 +3,7 @@ import { Validator } from '@quiz-app/shared';
 import { IQuizRepository } from '../repositories/IQuizRepository';
 import { IQuizResponseRepository } from '../repositories/IQuizResponseRepository';
 import { logger } from '../utils/logger';
+import { SCORING } from '../config/constants';
 
 export class QuizService {
   constructor(
@@ -86,13 +87,12 @@ export class QuizService {
       }
     });
 
-    // Build result with max score of 5 per question per metric
-    const maxScorePerQuestion = 5;
+    // Build result with max score per question per metric
     const result: QuizResult = {
       quizId: quiz.id,
       metricScores: quiz.metrics.map(metric => {
         const totalScore = metricTotals.get(metric.id) || 0;
-        const maxScore = quiz.questions.length * maxScorePerQuestion;
+        const maxScore = quiz.questions.length * SCORING.MAX_SCORE_PER_QUESTION;
         const percentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
 
         return {
