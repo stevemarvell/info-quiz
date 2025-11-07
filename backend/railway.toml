@@ -1,7 +1,7 @@
 [build]
 builder = "RAILPACK"
-buildCommand = "npm ci && npm run build"
-watchPaths = ["backend/**"]
+buildCommand = "cd .. && npm ci && npm run build:shared && npm run build:backend"
+watchPaths = ["backend/**", "shared/**"]
 
 [deploy]
 numReplicas = 1

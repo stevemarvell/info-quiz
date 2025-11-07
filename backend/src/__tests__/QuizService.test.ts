@@ -86,8 +86,8 @@ describe('QuizService', () => {
       // Max scores: m1 = 5+4 = 9, m2 = 4+5 = 9
       // User scores: m1 = 5+4 = 9, m2 = 2+1 = 3
 
-      const m1Result = result.metricScores.find(ms => ms.metricId === 'm1');
-      const m2Result = result.metricScores.find(ms => ms.metricId === 'm2');
+      const m1Result = result.metricScores.find((ms: any) => ms.metricId === 'm1');
+      const m2Result = result.metricScores.find((ms: any) => ms.metricId === 'm2');
 
       expect(m1Result).toBeDefined();
       expect(m1Result!.totalScore).toBe(9);
@@ -278,9 +278,9 @@ describe('QuizService', () => {
       const result = service.calculateResults(quiz, response);
 
       // m1: 5/5 = 100%, m2: 2/4 = 50%, m3: 0/5 = 0%
-      const m1 = result.metricScores.find(ms => ms.metricId === 'm1');
-      const m2 = result.metricScores.find(ms => ms.metricId === 'm2');
-      const m3 = result.metricScores.find(ms => ms.metricId === 'm3');
+      const m1 = result.metricScores.find((ms: any) => ms.metricId === 'm1');
+      const m2 = result.metricScores.find((ms: any) => ms.metricId === 'm2');
+      const m3 = result.metricScores.find((ms: any) => ms.metricId === 'm3');
 
       expect(m1!.totalScore).toBe(5);
       expect(m1!.maxScore).toBe(5);
