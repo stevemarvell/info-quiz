@@ -25,7 +25,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Lint backend
         run: npm run lint --workspace=backend
@@ -44,7 +44,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Lint frontend
         run: npm run lint --workspace=frontend --if-present
@@ -63,7 +63,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Lint shared package
         run: npm run lint --workspace=@quiz-app/shared --if-present
