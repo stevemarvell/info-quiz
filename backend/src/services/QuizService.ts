@@ -24,7 +24,7 @@ export class QuizService {
     // Validate quiz consistency
     const consistencyCheck = Validator.validateQuizConsistency(quiz);
     if (!consistencyCheck.valid) {
-      throw new Error(`Quiz validation failed: ${consistencyCheck.errors.join(', ')}`);
+      throw new AppError(400, 'Quiz validation failed', { errors: consistencyCheck.errors });
     }
 
     return this.quizRepository.create(quiz);
@@ -34,7 +34,7 @@ export class QuizService {
     // Validate quiz consistency
     const consistencyCheck = Validator.validateQuizConsistency(quiz);
     if (!consistencyCheck.valid) {
-      throw new Error(`Quiz validation failed: ${consistencyCheck.errors.join(', ')}`);
+      throw new AppError(400, 'Quiz validation failed', { errors: consistencyCheck.errors });
     }
 
     return this.quizRepository.update(id, quiz);
@@ -100,15 +100,21 @@ export class QuizService {
     // Calculate scores based on user's answers
     response.answers.forEach(answer => {
       const question = quiz.questions.find(q => q.id === answer.questionId);
-      if (question) {
-        const selectedAnswer = question.answers.find(a => a.id === answer.answerId);
-        if (selectedAnswer) {
-          selectedAnswer.metricScores.forEach(metricScore => {
-            const currentTotal = metricTotals.get(metricScore.metricId) || 0;
-            metricTotals.set(metricScore.metricId, currentTotal + metricScore.score);
-          });
-        }
+      if (!question) {
+        logger.warn(`Question ${answer.questionId} not found in quiz ${quiz.id}`);
+        return;
       }
+
+      const selectedAnswer = question.answers.find(a => a.id === answer.answerId);
+      if (!selectedAnswer) {
+        logger.warn(`Answer ${answer.answerId} not found in question ${answer.questionId}`);
+        return;
+      }
+
+      selectedAnswer.metricScores.forEach(metricScore => {
+        const currentTotal = metricTotals.get(metricScore.metricId) || 0;
+        metricTotals.set(metricScore.metricId, currentTotal + metricScore.score);
+      });
     });
 
     // Build result with dynamically calculated max scores

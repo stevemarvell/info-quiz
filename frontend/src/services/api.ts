@@ -12,7 +12,7 @@ const validateResponse = <T>(schema: z.ZodSchema<T>, data: unknown): T => {
   try {
     return schema.parse(data);
   } catch (error) {
-    console.error('API response validation failed:', error);
+    // Error handled by toast notification
     throw new Error('Invalid API response format');
   }
 };

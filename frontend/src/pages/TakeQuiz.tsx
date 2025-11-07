@@ -43,7 +43,7 @@ const TakeQuiz: React.FC = () => {
           setQuiz(data);
         }
       } catch (error) {
-        console.error('Error loading quiz:', error);
+        // Error handled by toast notification
         if (isMounted) {
           showError('Failed to load quiz');
         }
@@ -95,7 +95,7 @@ const TakeQuiz: React.FC = () => {
       const result = await api.submitQuiz(quiz.id, response);
       history.push(`/results/${quiz.id}`, { result });
     } catch (error) {
-      console.error('Error submitting quiz:', error);
+      // Error handled by toast notification
       showError('Failed to submit quiz. Please try again.');
     }
   };

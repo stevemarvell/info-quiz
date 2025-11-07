@@ -31,7 +31,7 @@ const Home: React.FC = () => {
       const data = await api.getAllQuizzes();
       setQuizzes(data);
     } catch (error) {
-      console.error('Error loading quizzes:', error);
+      // Error handled by toast notification
       showError('Failed to load quizzes');
     } finally {
       setLoading(false);

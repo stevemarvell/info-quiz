@@ -37,7 +37,7 @@ const AdminQuizList: React.FC = () => {
       const data = await api.getAllQuizzes();
       setQuizzes(data);
     } catch (error) {
-      console.error('Error loading quizzes:', error);
+      // Error handled by toast notification
       showError('Failed to load quizzes');
     } finally {
       setLoading(false);
@@ -51,7 +51,7 @@ const AdminQuizList: React.FC = () => {
       await loadQuizzes();
       setShowDeleteAlert(false);
     } catch (error) {
-      console.error('Error deleting quiz:', error);
+      // Error handled by toast notification
       showError('Failed to delete quiz');
     }
   };

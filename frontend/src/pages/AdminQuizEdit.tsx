@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import {
   IonContent,
   IonHeader,
@@ -77,7 +78,6 @@ const AdminQuizEdit: React.FC = () => {
       const quiz = await api.getQuiz(id);
       reset(quiz);
     } catch (error) {
-      console.error('Error loading quiz:', error);
       showError('Failed to load quiz');
     } finally {
       setLoading(false);
@@ -90,14 +90,13 @@ const AdminQuizEdit: React.FC = () => {
       showSuccess('Quiz updated successfully!');
       history.push('/admin');
     } catch (error) {
-      console.error('Error updating quiz:', error);
       showError('Failed to update quiz');
     }
   };
 
   const addMetric = () => {
     appendMetric({
-      id: `metric-${Date.now()}`,
+      id: `metric-${uuidv4()}`,
       name: '',
       description: ''
     });
@@ -105,7 +104,7 @@ const AdminQuizEdit: React.FC = () => {
 
   const addQuestion = () => {
     appendQuestion({
-      id: `q-${Date.now()}`,
+      id: `q-${uuidv4()}`,
       text: '',
       answers: []
     });
@@ -114,7 +113,7 @@ const AdminQuizEdit: React.FC = () => {
   const addAnswer = (questionIndex: number) => {
     const currentAnswers = watchedQuestions[questionIndex]?.answers || [];
     const newAnswer: Answer = {
-      id: `a-${Date.now()}`,
+      id: `a-${uuidv4()}`,
       text: '',
       metricScores: watchedMetrics.map(m => ({ metricId: m.id, score: 0 }))
     };

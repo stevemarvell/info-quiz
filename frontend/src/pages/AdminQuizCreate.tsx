@@ -1,5 +1,6 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { v4 as uuidv4 } from 'uuid';
 import {
   IonContent,
   IonHeader,
@@ -42,7 +43,7 @@ const AdminQuizCreate: React.FC = () => {
   } = useForm<Quiz>({
     resolver: zodResolver(QuizSchema),
     defaultValues: {
-      id: `quiz-${Date.now()}`,
+      id: `quiz-${uuidv4()}`,
       title: '',
       description: '',
       metrics: [],
@@ -66,11 +67,11 @@ const AdminQuizCreate: React.FC = () => {
   const watchedQuestions = watch('questions');
 
   const addMetric = () => {
-    appendMetric({ id: `m-${Date.now()}`, name: '', description: '' });
+    appendMetric({ id: `m-${uuidv4()}`, name: '', description: '' });
   };
 
   const addQuestion = () => {
-    appendQuestion({ id: `q-${Date.now()}`, text: '', answers: [] });
+    appendQuestion({ id: `q-${uuidv4()}`, text: '', answers: [] });
   };
 
   const addAnswer = (questionIndex: number) => {
@@ -78,7 +79,7 @@ const AdminQuizCreate: React.FC = () => {
     setValue(`questions.${questionIndex}.answers`, [
       ...answers,
       {
-        id: `a-${Date.now()}`,
+        id: `a-${uuidv4()}`,
         text: '',
         metricScores: watchedMetrics.map(m => ({ metricId: m.id, score: 0 }))
       }
@@ -99,7 +100,7 @@ const AdminQuizCreate: React.FC = () => {
       showSuccess('Quiz created successfully!');
       history.push('/admin');
     } catch (error: any) {
-      console.error('Error creating quiz:', error);
+      // Error creating quiz
       showError(error.response?.data?.message || 'Failed to create quiz');
     }
   };
