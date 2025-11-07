@@ -5,17 +5,8 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import TakeQuiz from '../TakeQuiz';
 import { api } from '../../services/api';
 
-// Mock the API
-vi.mock('../../services/api', () => ({
-  api: {
-    getAllQuizzes: vi.fn(),
-    getQuiz: vi.fn(),
-    createQuiz: vi.fn(),
-    updateQuiz: vi.fn(),
-    deleteQuiz: vi.fn(),
-    submitQuiz: vi.fn(),
-  }
-}));
+// Use manual mock from __mocks__ directory
+vi.mock('../../services/api');
 
 const mockQuiz = {
   id: 'quiz-1',
