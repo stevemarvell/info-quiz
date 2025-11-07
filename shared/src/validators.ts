@@ -51,7 +51,7 @@ export class Validator {
     return this.validate(UpdateQuizSchema, data);
   }
 
-  static validateQuizResponse(data: unknown): ValidationResult<any> {
+  static validateQuizResponseSchema(data: unknown): ValidationResult<any> {
     return this.validate(QuizResponseSchema, data);
   }
 
@@ -97,11 +97,11 @@ export class Validator {
     };
   }
 
-  static validateQuizResponse(quiz: any, response: any): { valid: boolean; errors: string[] } {
+  static validateQuizResponseConsistency(quiz: any, response: any): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     const questionIds = new Set(quiz.questions.map((q: any) => q.id));
-    const questionAnswerMap = new Map(
+    const questionAnswerMap = new Map<string, Set<string>>(
       quiz.questions.map((q: any) => [q.id, new Set(q.answers.map((a: any) => a.id))])
     );
 

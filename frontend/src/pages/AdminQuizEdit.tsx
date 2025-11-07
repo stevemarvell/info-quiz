@@ -10,7 +10,6 @@ import {
   IonTextarea,
   IonItem,
   IonLabel,
-  IonList,
   IonCard,
   IonCardHeader,
   IonCardTitle,
@@ -19,21 +18,55 @@ import {
   IonButtons,
   IonBackButton,
   IonRange,
-  IonSpinner
+  IonSpinner,
+  IonNote
 } from '@ionic/react';
 import { add, trash } from 'ionicons/icons';
 import { useHistory, useParams } from 'react-router-dom';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { api } from '../services/api';
-import { Quiz, Metric, Question, Answer } from '../types';
+import { Quiz, QuizSchema, Metric, Question, Answer } from '../types';
+import { FormField } from '../components/FormField';
+import { useToast } from '../hooks/useToast';
 
 const AdminQuizEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const history = useHistory();
   const [loading, setLoading] = useState(true);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [metrics, setMetrics] = useState<Metric[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const { showSuccess, showError } = useToast();
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors, isSubmitting }
+  } = useForm<Quiz>({
+    resolver: zodResolver(QuizSchema),
+    defaultValues: {
+      id: '',
+      title: '',
+      description: '',
+      metrics: [],
+      questions: []
+    }
+  });
+
+  const { fields: metrics, append: appendMetric, remove: removeMetric } = useFieldArray({
+    control,
+    name: 'metrics'
+  });
+
+  const { fields: questions, append: appendQuestion, remove: removeQuestion } = useFieldArray({
+    control,
+    name: 'questions'
+  });
+
+  const watchedMetrics = watch('metrics');
+  const watchedQuestions = watch('questions');
 
   useEffect(() => {
     loadQuiz();
@@ -42,110 +75,58 @@ const AdminQuizEdit: React.FC = () => {
   const loadQuiz = async () => {
     try {
       const quiz = await api.getQuiz(id);
-      setTitle(quiz.title);
-      setDescription(quiz.description);
-      setMetrics(quiz.metrics);
-      setQuestions(quiz.questions);
+      reset(quiz);
     } catch (error) {
       console.error('Error loading quiz:', error);
+      showError('Failed to load quiz');
     } finally {
       setLoading(false);
     }
   };
 
-  const addMetric = () => {
-    const newMetric: Metric = {
-      id: `metric-${Date.now()}`,
-      name: '',
-      description: ''
-    };
-    setMetrics([...metrics, newMetric]);
-  };
-
-  const updateMetric = (index: number, field: keyof Metric, value: string) => {
-    const updated = [...metrics];
-    updated[index] = { ...updated[index], [field]: value };
-    setMetrics(updated);
-  };
-
-  const removeMetric = (index: number) => {
-    setMetrics(metrics.filter((_, i) => i !== index));
-  };
-
-  const addQuestion = () => {
-    const newQuestion: Question = {
-      id: `q-${Date.now()}`,
-      text: '',
-      answers: []
-    };
-    setQuestions([...questions, newQuestion]);
-  };
-
-  const updateQuestion = (index: number, text: string) => {
-    const updated = [...questions];
-    updated[index] = { ...updated[index], text };
-    setQuestions(updated);
-  };
-
-  const removeQuestion = (index: number) => {
-    setQuestions(questions.filter((_, i) => i !== index));
-  };
-
-  const addAnswer = (questionIndex: number) => {
-    const updated = [...questions];
-    const newAnswer: Answer = {
-      id: `a-${Date.now()}`,
-      text: '',
-      metricScores: metrics.map(m => ({ metricId: m.id, score: 0 }))
-    };
-    updated[questionIndex].answers.push(newAnswer);
-    setQuestions(updated);
-  };
-
-  const updateAnswer = (questionIndex: number, answerIndex: number, text: string) => {
-    const updated = [...questions];
-    updated[questionIndex].answers[answerIndex].text = text;
-    setQuestions(updated);
-  };
-
-  const updateAnswerMetricScore = (
-    questionIndex: number,
-    answerIndex: number,
-    metricId: string,
-    score: number
-  ) => {
-    const updated = [...questions];
-    const answer = updated[questionIndex].answers[answerIndex];
-    const scoreIndex = answer.metricScores.findIndex(ms => ms.metricId === metricId);
-    if (scoreIndex >= 0) {
-      answer.metricScores[scoreIndex].score = score;
-    }
-    setQuestions(updated);
-  };
-
-  const removeAnswer = (questionIndex: number, answerIndex: number) => {
-    const updated = [...questions];
-    updated[questionIndex].answers = updated[questionIndex].answers.filter(
-      (_, i) => i !== answerIndex
-    );
-    setQuestions(updated);
-  };
-
-  const handleSave = async () => {
-    const quiz: Quiz = {
-      id,
-      title,
-      description,
-      metrics,
-      questions
-    };
-
+  const onSubmit = async (data: Quiz) => {
     try {
-      await api.updateQuiz(id, quiz);
+      await api.updateQuiz(id, data);
+      showSuccess('Quiz updated successfully!');
       history.push('/admin');
     } catch (error) {
       console.error('Error updating quiz:', error);
+      showError('Failed to update quiz');
     }
+  };
+
+  const addMetric = () => {
+    appendMetric({
+      id: `metric-${Date.now()}`,
+      name: '',
+      description: ''
+    });
+  };
+
+  const addQuestion = () => {
+    appendQuestion({
+      id: `q-${Date.now()}`,
+      text: '',
+      answers: []
+    });
+  };
+
+  const addAnswer = (questionIndex: number) => {
+    const currentAnswers = watchedQuestions[questionIndex]?.answers || [];
+    const newAnswer: Answer = {
+      id: `a-${Date.now()}`,
+      text: '',
+      metricScores: watchedMetrics.map(m => ({ metricId: m.id, score: 0 }))
+    };
+    setValue(`questions.${questionIndex}.answers`, [...currentAnswers, newAnswer]);
+  };
+
+  const removeAnswer = (questionIndex: number, answerIndex: number) => {
+    const currentAnswers = watchedQuestions[questionIndex]?.answers || [];
+    setValue(
+      `questions.${questionIndex}.answers`,
+      currentAnswers.filter((_, i) => i !== answerIndex)
+    );
   };
 
   if (loading) {
@@ -174,34 +155,36 @@ const AdminQuizEdit: React.FC = () => {
           </IonButtons>
           <IonTitle>Edit Quiz</IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={handleSave}>Save</IonButton>
+            <IonButton onClick={handleSubmit(onSubmit)} disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save'}
+            </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
-        <div style={{ padding: '1rem' }}>
+        <form onSubmit={handleSubmit(onSubmit)} style={{ padding: '1rem' }}>
           <IonCard>
             <IonCardHeader>
               <IonCardTitle>Quiz Details</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <IonItem>
-                <IonLabel position="stacked">Title</IonLabel>
-                <IonInput
-                  value={title}
-                  onIonChange={e => setTitle(e.detail.value!)}
-                  placeholder="Enter quiz title"
-                />
-              </IonItem>
-              <IonItem>
-                <IonLabel position="stacked">Description</IonLabel>
-                <IonTextarea
-                  value={description}
-                  onIonChange={e => setDescription(e.detail.value!)}
-                  placeholder="Enter quiz description"
-                  rows={3}
-                />
-              </IonItem>
+              <FormField
+                label="Title"
+                name="title"
+                register={register}
+                error={errors.title}
+                placeholder="Enter quiz title"
+                required
+              />
+              <FormField
+                label="Description"
+                name="description"
+                register={register}
+                error={errors.description}
+                placeholder="Enter quiz description"
+                multiline
+                rows={3}
+              />
             </IonCardContent>
           </IonCard>
 
@@ -209,13 +192,16 @@ const AdminQuizEdit: React.FC = () => {
             <IonCardHeader>
               <IonCardTitle>
                 Metrics
-                <IonButton onClick={addMetric} size="small" style={{ float: 'right' }}>
+                <IonButton onClick={addMetric} size="small" type="button" style={{ float: 'right' }}>
                   <IonIcon icon={add} />
                   Add Metric
                 </IonButton>
               </IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
+              {errors.metrics && (
+                <IonNote color="danger">{errors.metrics.message}</IonNote>
+              )}
               {metrics.length === 0 ? (
                 <p>No metrics added yet</p>
               ) : (
@@ -223,24 +209,28 @@ const AdminQuizEdit: React.FC = () => {
                   <IonCard key={metric.id}>
                     <IonCardContent>
                       <IonItem>
-                        <IonLabel position="stacked">Metric Name</IonLabel>
+                        <IonLabel position="stacked">Metric Name *</IonLabel>
                         <IonInput
-                          value={metric.name}
-                          onIonChange={e => updateMetric(index, 'name', e.detail.value!)}
+                          {...register(`metrics.${index}.name`)}
                           placeholder="e.g., Physical Health"
                         />
                       </IonItem>
+                      {errors.metrics?.[index]?.name && (
+                        <IonNote color="danger">
+                          {errors.metrics[index]?.name?.message}
+                        </IonNote>
+                      )}
                       <IonItem>
                         <IonLabel position="stacked">Description</IonLabel>
                         <IonInput
-                          value={metric.description}
-                          onIonChange={e => updateMetric(index, 'description', e.detail.value!)}
+                          {...register(`metrics.${index}.description`)}
                           placeholder="Brief description"
                         />
                       </IonItem>
                       <IonButton
                         color="danger"
                         size="small"
+                        type="button"
                         onClick={() => removeMetric(index)}
                       >
                         <IonIcon icon={trash} />
@@ -257,13 +247,16 @@ const AdminQuizEdit: React.FC = () => {
             <IonCardHeader>
               <IonCardTitle>
                 Questions
-                <IonButton onClick={addQuestion} size="small" style={{ float: 'right' }}>
+                <IonButton onClick={addQuestion} size="small" type="button" style={{ float: 'right' }}>
                   <IonIcon icon={add} />
                   Add Question
                 </IonButton>
               </IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
+              {errors.questions && (
+                <IonNote color="danger">{errors.questions.message}</IonNote>
+              )}
               {questions.length === 0 ? (
                 <p>No questions added yet</p>
               ) : (
@@ -274,45 +267,56 @@ const AdminQuizEdit: React.FC = () => {
                     </IonCardHeader>
                     <IonCardContent>
                       <IonItem>
-                        <IonLabel position="stacked">Question Text</IonLabel>
+                        <IonLabel position="stacked">Question Text *</IonLabel>
                         <IonTextarea
-                          value={question.text}
-                          onIonChange={e => updateQuestion(qIndex, e.detail.value!)}
+                          {...register(`questions.${qIndex}.text`)}
                           placeholder="Enter your question"
                         />
                       </IonItem>
-                      <IonButton onClick={() => addAnswer(qIndex)} size="small">
+                      {errors.questions?.[qIndex]?.text && (
+                        <IonNote color="danger">
+                          {errors.questions[qIndex]?.text?.message}
+                        </IonNote>
+                      )}
+                      <IonButton onClick={() => addAnswer(qIndex)} size="small" type="button">
                         <IonIcon icon={add} />
                         Add Answer
                       </IonButton>
                       <IonButton
                         color="danger"
                         size="small"
+                        type="button"
                         onClick={() => removeQuestion(qIndex)}
                       >
                         <IonIcon icon={trash} />
                         Remove Question
                       </IonButton>
 
-                      {question.answers.map((answer, aIndex) => (
+                      {watchedQuestions[qIndex]?.answers?.map((answer, aIndex) => (
                         <IonCard key={answer.id} style={{ marginTop: '1rem' }}>
                           <IonCardContent>
                             <IonItem>
-                              <IonLabel position="stacked">Answer Text</IonLabel>
+                              <IonLabel position="stacked">Answer Text *</IonLabel>
                               <IonInput
-                                value={answer.text}
-                                onIonChange={e =>
-                                  updateAnswer(qIndex, aIndex, e.detail.value!)
-                                }
+                                {...register(`questions.${qIndex}.answers.${aIndex}.text`)}
                                 placeholder="Enter answer"
                               />
                             </IonItem>
+                            {errors.questions?.[qIndex]?.answers?.[aIndex]?.text && (
+                              <IonNote color="danger">
+                                {errors.questions[qIndex]?.answers?.[aIndex]?.text?.message}
+                              </IonNote>
+                            )}
 
                             <h4 style={{ marginTop: '1rem' }}>Metric Scores (0-5)</h4>
-                            {metrics.map(metric => {
-                              const metricScore = answer.metricScores.find(
+                            {watchedMetrics.map((metric, mIndex) => {
+                              const metricScore = answer.metricScores?.find(
                                 ms => ms.metricId === metric.id
                               );
+                              const scoreIndex = answer.metricScores?.findIndex(
+                                ms => ms.metricId === metric.id
+                              );
+
                               return (
                                 <IonItem key={metric.id}>
                                   <IonLabel>
@@ -322,14 +326,14 @@ const AdminQuizEdit: React.FC = () => {
                                     min={0}
                                     max={5}
                                     value={metricScore?.score || 0}
-                                    onIonChange={e =>
-                                      updateAnswerMetricScore(
-                                        qIndex,
-                                        aIndex,
-                                        metric.id,
-                                        e.detail.value as number
-                                      )
-                                    }
+                                    onIonChange={e => {
+                                      if (scoreIndex !== undefined && scoreIndex >= 0) {
+                                        setValue(
+                                          `questions.${qIndex}.answers.${aIndex}.metricScores.${scoreIndex}.score`,
+                                          e.detail.value as number
+                                        );
+                                      }
+                                    }}
                                   />
                                 </IonItem>
                               );
@@ -338,6 +342,7 @@ const AdminQuizEdit: React.FC = () => {
                             <IonButton
                               color="danger"
                               size="small"
+                              type="button"
                               onClick={() => removeAnswer(qIndex, aIndex)}
                             >
                               <IonIcon icon={trash} />
@@ -352,7 +357,7 @@ const AdminQuizEdit: React.FC = () => {
               )}
             </IonCardContent>
           </IonCard>
-        </div>
+        </form>
       </IonContent>
     </IonPage>
   );

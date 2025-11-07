@@ -110,6 +110,6 @@ export class QuizService {
   }
 
   validateQuizResponse(quiz: Quiz, response: QuizResponse): { valid: boolean; errors: string[] } {
-    return Validator.validateQuizResponse(quiz, response);
+    return Validator.validateQuizResponseConsistency(quiz, response);
   }
 }

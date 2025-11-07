@@ -18,6 +18,7 @@ import { add, create, trash } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { api } from '../services/api';
 import { Quiz } from '../types';
+import { useToast } from '../hooks/useToast';
 
 const AdminQuizList: React.FC = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -25,6 +26,7 @@ const AdminQuizList: React.FC = () => {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [deleteQuizId, setDeleteQuizId] = useState<string>('');
   const history = useHistory();
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     loadQuizzes();
@@ -36,6 +38,7 @@ const AdminQuizList: React.FC = () => {
       setQuizzes(data);
     } catch (error) {
       console.error('Error loading quizzes:', error);
+      showError('Failed to load quizzes');
     } finally {
       setLoading(false);
     }
@@ -44,10 +47,12 @@ const AdminQuizList: React.FC = () => {
   const handleDelete = async () => {
     try {
       await api.deleteQuiz(deleteQuizId);
+      showSuccess('Quiz deleted successfully!');
       await loadQuizzes();
       setShowDeleteAlert(false);
     } catch (error) {
       console.error('Error deleting quiz:', error);
+      showError('Failed to delete quiz');
     }
   };
 

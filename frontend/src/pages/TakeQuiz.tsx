@@ -22,6 +22,7 @@ import {
 import { useHistory, useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { Quiz, QuizResponse } from '../types';
+import { useToast } from '../hooks/useToast';
 
 const TakeQuiz: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +31,7 @@ const TakeQuiz: React.FC = () => {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [questionId: string]: string }>({});
+  const { showError } = useToast();
 
   useEffect(() => {
     loadQuiz();
@@ -41,6 +43,7 @@ const TakeQuiz: React.FC = () => {
       setQuiz(data);
     } catch (error) {
       console.error('Error loading quiz:', error);
+      showError('Failed to load quiz');
     } finally {
       setLoading(false);
     }
@@ -81,6 +84,7 @@ const TakeQuiz: React.FC = () => {
       history.push(`/results/${quiz.id}`, { result });
     } catch (error) {
       console.error('Error submitting quiz:', error);
+      showError('Failed to submit quiz. Please try again.');
     }
   };
 

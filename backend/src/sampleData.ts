@@ -1,4 +1,4 @@
-import { IQuizStore } from './interfaces/IQuizStore';
+import { IQuizRepository } from './repositories/IQuizRepository';
 import { Quiz } from '@quiz-app/shared';
 import { logger } from './utils/logger';
 

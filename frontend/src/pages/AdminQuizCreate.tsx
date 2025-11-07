@@ -26,9 +26,11 @@ import { useHistory } from 'react-router-dom';
 import { Quiz, QuizSchema } from '@quiz-app/shared';
 import { api } from '../services/api';
 import { FormField } from '../components/FormField';
+import { useToast } from '../hooks/useToast';
 
 const AdminQuizCreate: React.FC = () => {
   const history = useHistory();
+  const { showSuccess, showError } = useToast();
 
   const {
     register,
@@ -94,10 +96,11 @@ const AdminQuizCreate: React.FC = () => {
   const onSubmit = async (data: Quiz) => {
     try {
       await api.createQuiz(data);
+      showSuccess('Quiz created successfully!');
       history.push('/admin');
     } catch (error: any) {
       console.error('Error creating quiz:', error);
-      alert(error.response?.data?.message || 'Failed to create quiz');
+      showError(error.response?.data?.message || 'Failed to create quiz');
     }
   };
 

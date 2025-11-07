@@ -14,11 +14,13 @@ import {
 import { useHistory } from 'react-router-dom';
 import { api } from '../services/api';
 import { Quiz } from '../types';
+import { useToast } from '../hooks/useToast';
 
 const Home: React.FC = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
   const history = useHistory();
+  const { showError } = useToast();
 
   useEffect(() => {
     loadQuizzes();
@@ -30,6 +32,7 @@ const Home: React.FC = () => {
       setQuizzes(data);
     } catch (error) {
       console.error('Error loading quizzes:', error);
+      showError('Failed to load quizzes');
     } finally {
       setLoading(false);
     }
