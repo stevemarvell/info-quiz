@@ -94,6 +94,9 @@ describe('Validator', () => {
   describe('validateQuizConsistency', () => {
     it('should validate quiz with consistent metric references', () => {
       const quiz = {
+        id: 'test-quiz',
+        title: 'Test Quiz',
+        description: 'Test Description',
         metrics: [{ id: 'm1', name: 'Metric 1', description: '' }],
         questions: [
           {
@@ -122,6 +125,9 @@ describe('Validator', () => {
 
     it('should reject quiz with invalid metric reference', () => {
       const quiz = {
+        id: 'test-quiz',
+        title: 'Test Quiz',
+        description: 'Test Description',
         metrics: [{ id: 'm1', name: 'Metric 1', description: '' }],
         questions: [
           {
@@ -151,6 +157,9 @@ describe('Validator', () => {
 
     it('should reject quiz with duplicate question IDs', () => {
       const quiz = {
+        id: 'test-quiz',
+        title: 'Test Quiz',
+        description: 'Test Description',
         metrics: [{ id: 'm1', name: 'Metric 1', description: '' }],
         questions: [
           {
@@ -196,6 +205,10 @@ describe('Validator', () => {
 
   describe('validateQuizResponse', () => {
     const quiz = {
+      id: 'test-quiz',
+      title: 'Test Quiz',
+      description: 'Test Description',
+      metrics: [{ id: 'm1', name: 'Metric 1', description: '' }],
       questions: [
         {
           id: 'q1',
@@ -218,49 +231,53 @@ describe('Validator', () => {
 
     it('should validate a valid response', () => {
       const response = {
+        quizId: 'test-quiz',
         answers: [
           { questionId: 'q1', answerId: 'a1' },
           { questionId: 'q2', answerId: 'a3' }
         ]
       };
 
-      const result = Validator.validateQuizResponse(quiz, response);
+      const result = Validator.validateQuizResponseConsistency(quiz, response);
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
 
     it('should reject response with invalid question ID', () => {
       const response = {
+        quizId: 'test-quiz',
         answers: [
           { questionId: 'invalid-q', answerId: 'a1' },
           { questionId: 'q2', answerId: 'a3' }
         ]
       };
 
-      const result = Validator.validateQuizResponse(quiz, response);
+      const result = Validator.validateQuizResponseConsistency(quiz, response);
       expect(result.valid).toBe(false);
       expect(result.errors[0]).toContain('Invalid question ID');
     });
 
     it('should reject response with invalid answer ID', () => {
       const response = {
+        quizId: 'test-quiz',
         answers: [
           { questionId: 'q1', answerId: 'invalid-a' },
           { questionId: 'q2', answerId: 'a3' }
         ]
       };
 
-      const result = Validator.validateQuizResponse(quiz, response);
+      const result = Validator.validateQuizResponseConsistency(quiz, response);
       expect(result.valid).toBe(false);
       expect(result.errors[0]).toContain('not valid for question');
     });
 
     it('should reject response with missing questions', () => {
       const response = {
+        quizId: 'test-quiz',
         answers: [{ questionId: 'q1', answerId: 'a1' }]
       };
 
-      const result = Validator.validateQuizResponse(quiz, response);
+      const result = Validator.validateQuizResponseConsistency(quiz, response);
       expect(result.valid).toBe(false);
       expect(result.errors.some((e: string) => e.includes('was not answered'))).toBe(true);
     });
