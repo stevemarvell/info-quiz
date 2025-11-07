@@ -12,6 +12,43 @@ A professional quiz application with metric-based scoring built as a **monorepo*
 
 ## Development Standards
 
+### Git Workflow Standards
+
+**Branch Naming Convention:**
+Use standard prefixes for all branches:
+- `feat/` - New features (e.g., `feat/quiz-pagination`, `feat/user-authentication`)
+- `fix/` - Bug fixes (e.g., `fix/api-endpoint-mismatch`, `fix/test-failures`)
+- `chore/` - Maintenance tasks (e.g., `chore/update-dependencies`, `chore/refactor-types`)
+- `docs/` - Documentation only (e.g., `docs/api-reference`, `docs/deployment-guide`)
+- `test/` - Test additions/fixes (e.g., `test/frontend-coverage`, `test/integration-tests`)
+
+**Commit Message Format:**
+Use conventional commit format:
+```
+<type>: <description>
+
+<body (optional)>
+```
+
+Examples:
+- `feat: add pagination to quiz list endpoint`
+- `fix: correct API endpoint for quiz submission`
+- `chore: remove defunct shared package directory`
+
+### Consistency Standards
+
+**CRITICAL: Maintain consistency across the codebase.**
+
+- **Patterns**: Follow established patterns (Repository, DI, three-layer architecture) consistently
+- **Naming**: Use consistent naming conventions (camelCase for variables, PascalCase for classes/types)
+- **Error Handling**: Use the same error handling pattern everywhere (AppError class, asyncHandler wrapper)
+- **Validation**: Always use Zod schemas for validation, both frontend and backend
+- **Styling**: Follow the same code formatting rules (enforced by linters)
+- **Testing**: Use consistent test patterns (AAA: Arrange, Act, Assert)
+- **Documentation**: Update ALL relevant documentation when making changes
+
+**When adding new features, ALWAYS review existing implementations first to maintain consistency.**
+
 ### Zero-Issue Policy
 
 **CRITICAL: I don't want a single issue when you push.**
@@ -144,13 +181,41 @@ export const QuizSchema = z.object({
 export type Quiz = z.infer<typeof QuizSchema>;
 ```
 
-**IMPORTANT**: Shared code is duplicated in both `backend/src/shared/` and `frontend/src/shared/` for deployment simplicity.
+**IMPORTANT - Controlled Duplication Strategy:**
 
-**Workflow for changing types**:
-1. Edit `backend/src/shared/schemas.ts` AND `frontend/src/shared/schemas.ts`
-2. Keep both versions synchronized
-3. Run builds to verify: `npm run build`
-4. Types automatically propagate through both packages
+Shared code is **intentionally duplicated** in both `backend/src/shared/` and `frontend/src/shared/` because Railway deploys each service independently from its own root directory. Each service must be completely self-contained with no cross-workspace dependencies.
+
+**Why Duplication is Required:**
+- Railway builds backend from `/backend` directory only (no access to root or frontend)
+- Railway builds frontend from `/frontend` directory only (no access to root or backend)
+- Using npm workspace references (`@quiz-app/shared`) would fail in Railway's isolated build environment
+- This is a **deployment constraint**, not a development preference
+
+**Duplication Management Workflow:**
+
+When updating shared types/schemas, you **MUST** update both locations:
+
+1. **Edit Backend First**: Update `/backend/src/shared/schemas.ts`
+2. **Copy to Frontend**: Update `/frontend/src/shared/schemas.ts` with identical changes
+3. **Verify Consistency**: Run `npm run build` to ensure both compile
+4. **Run Tests**: Ensure tests pass in both packages
+
+**Files That Must Be Kept in Sync:**
+- `backend/src/shared/schemas.ts` ↔ `frontend/src/shared/schemas.ts`
+- `backend/src/shared/validators.ts` ↔ `frontend/src/shared/validators.ts` (if frontend needs validators)
+- `backend/src/shared/types.ts` ↔ `frontend/src/shared/types.ts`
+
+**Checking for Drift:**
+```bash
+# Compare files to ensure they're in sync
+diff backend/src/shared/schemas.ts frontend/src/shared/schemas.ts
+
+# Should show no differences (or only expected environment-specific differences)
+```
+
+**Alternative Considered (Not Used):**
+- ❌ Using npm workspace `@quiz-app/shared` package - Breaks Railway deployment
+- ✅ Current approach: Controlled duplication with strict sync process
 
 ### 2. Repository Pattern (Backend)
 
