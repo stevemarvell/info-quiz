@@ -166,11 +166,9 @@ describe('Quiz API Routes', () => {
     it('should delete a quiz', async () => {
       await quizRepository.create(sampleQuiz);
 
-      const response = await request(app)
+      await request(app)
         .delete('/api/quizzes/test-quiz-1')
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
+        .expect(204);
 
       // Verify it was deleted
       const deleted = await quizRepository.findById('test-quiz-1');

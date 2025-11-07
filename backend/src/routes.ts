@@ -80,11 +80,11 @@ export function createRouter(quizService: QuizService): Router {
 
   // Submit quiz responses and calculate results
   router.post(
-    '/quizzes/:id/submit',
+    '/quizzes/:id/responses',
     validateBody(QuizResponseSchema),
     asyncHandler(async (req: Request, res: Response) => {
       const { id } = req.params;
-      logger.info(`POST /quizzes/${id}/submit`);
+      logger.info(`POST /quizzes/${id}/responses`);
 
       const result = await quizService.submitQuizResponse(id, req.body);
       res.json({ success: true, data: result });

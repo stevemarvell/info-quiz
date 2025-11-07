@@ -2,6 +2,7 @@ import { Quiz, QuizResponse, QuizResult } from '@quiz-app/shared';
 import { Validator } from '@quiz-app/shared';
 import { IQuizRepository } from '../repositories/IQuizRepository';
 import { IQuizResponseRepository } from '../repositories/IQuizResponseRepository';
+import { AppError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { SCORING } from '../config/constants';
 
@@ -46,13 +47,13 @@ export class QuizService {
   async submitQuizResponse(quizId: string, response: QuizResponse): Promise<QuizResult> {
     const quiz = await this.quizRepository.findById(quizId);
     if (!quiz) {
-      throw new Error('Quiz not found');
+      throw new AppError(404, 'Quiz not found');
     }
 
     // Validate response
     const responseValidation = this.validateQuizResponse(quiz, response);
     if (!responseValidation.valid) {
-      throw new Error(`Invalid quiz response: ${responseValidation.errors.join(', ')}`);
+      throw new AppError(400, `Invalid quiz response: ${responseValidation.errors.join(', ')}`);
     }
 
     // Calculate results

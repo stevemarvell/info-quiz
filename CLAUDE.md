@@ -9,6 +9,60 @@ A professional quiz application with metric-based scoring built as a **monorepo*
 - **backend**: Node/Express API with Repository pattern and Dependency Injection
 - **frontend**: Ionic React app with React Hook Form
 
+## Development Standards
+
+### Zero-Issue Policy
+
+**CRITICAL: I don't want a single issue when you push.**
+
+Every commit must meet these standards:
+
+1. **Build Verification**
+   - Run `npm run build` - ALL packages must compile without errors
+   - Fix TypeScript errors immediately, never commit with build failures
+
+2. **Test Verification**
+   - Run `npm test` or `npm run test:backend`
+   - All tests must pass before commit
+   - Add tests for new functionality
+
+3. **Code Quality**
+   - No TypeScript `any` types without explicit justification
+   - No console.log statements (use logger utility)
+   - No commented-out code blocks
+   - No unused imports or variables
+
+4. **Security**
+   - All user input must be validated (Zod schemas)
+   - All user input must be sanitized (xss library)
+   - No hardcoded secrets or credentials
+   - Follow OWASP top 10 guidelines
+
+5. **Architecture Compliance**
+   - Follow established patterns (Repository, DI, three-layer)
+   - Update shared schemas first, then rebuild before backend/frontend changes
+   - Use proper error handling (try-catch, asyncHandler)
+   - Add proper TypeScript types to all functions
+
+6. **Documentation**
+   - Update API_DOCUMENTATION.md for API changes
+   - Add JSDoc comments for complex functions
+   - Update CLAUDE.md if adding new patterns
+
+### Pre-Commit Checklist
+
+Before every commit, verify:
+- [ ] `npm run build` succeeds (all packages)
+- [ ] `npm test` passes (or relevant workspace tests)
+- [ ] `npm run lint` shows no errors
+- [ ] No TypeScript errors in IDE
+- [ ] All new code has proper types
+- [ ] User inputs are validated and sanitized
+- [ ] Tests added for new functionality
+- [ ] No debug code or console.logs
+
+**If ANY check fails, DO NOT COMMIT. Fix the issues first.**
+
 ## Development Commands
 
 ### Running the App

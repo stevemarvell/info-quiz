@@ -1,26 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
+import xss from 'xss';
 
 /**
  * Sanitize string to prevent XSS attacks
- * Removes/escapes potentially dangerous HTML and script content
+ * Uses the xss library for robust, battle-tested XSS prevention
  */
 export const sanitizeString = (value: string): string => {
   if (typeof value !== 'string') return value;
 
-  return value
-    // Remove script tags and their content
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    // Remove event handlers (onclick, onerror, etc.)
-    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-    .replace(/on\w+\s*=\s*[^\s>]*/gi, '')
-    // Remove javascript: protocol
-    .replace(/javascript:/gi, '')
-    // Escape HTML special characters
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
+  // Use xss library with strict options
+  return xss(value, {
+    whiteList: {}, // No HTML tags allowed
+    stripIgnoreTag: true, // Remove all HTML tags
+    stripIgnoreTagBody: ['script'], // Remove script tags and content
+  });
 };
 
 /**

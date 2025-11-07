@@ -22,13 +22,13 @@ describe('Sanitization Middleware', () => {
       expect(output).not.toContain('javascript:');
     });
 
-    it('should escape HTML special characters', () => {
+    it('should remove HTML tags', () => {
       const input = '<div>"Hello" & \'World\'</div>';
       const output = sanitizeString(input);
-      expect(output).toContain('&lt;');
-      expect(output).toContain('&gt;');
-      expect(output).toContain('&quot;');
-      expect(output).toContain('&#x27;');
+      // xss library strips HTML tags with our configuration
+      expect(output).toBe('"Hello" & \'World\'');
+      expect(output).not.toContain('<div>');
+      expect(output).not.toContain('</div>');
     });
 
     it('should handle normal text without changes', () => {

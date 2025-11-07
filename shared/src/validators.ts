@@ -87,13 +87,26 @@ export class Validator {
       }
     }
 
-    // Check for duplicate IDs
+    // Check for duplicate question IDs
     const questionIds = quiz.questions.map(q => q.id);
     const duplicateQuestions = questionIds.filter(
       (id: string, index: number) => questionIds.indexOf(id) !== index
     );
     if (duplicateQuestions.length > 0) {
       errors.push(`Duplicate question IDs found: ${duplicateQuestions.join(', ')}`);
+    }
+
+    // Check for duplicate answer IDs within each question
+    for (const question of quiz.questions) {
+      const answerIds = question.answers.map(a => a.id);
+      const duplicateAnswers = answerIds.filter(
+        (id: string, index: number) => answerIds.indexOf(id) !== index
+      );
+      if (duplicateAnswers.length > 0) {
+        errors.push(
+          `Duplicate answer IDs found in question '${question.text}': ${duplicateAnswers.join(', ')}`
+        );
+      }
     }
 
     return {

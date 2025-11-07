@@ -34,20 +34,32 @@ const TakeQuiz: React.FC = () => {
   const { showError } = useToast();
 
   useEffect(() => {
-    loadQuiz();
-  }, [id]);
+    let isMounted = true;
 
-  const loadQuiz = async () => {
-    try {
-      const data = await api.getQuiz(id);
-      setQuiz(data);
-    } catch (error) {
-      console.error('Error loading quiz:', error);
-      showError('Failed to load quiz');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const loadQuiz = async () => {
+      try {
+        const data = await api.getQuiz(id);
+        if (isMounted) {
+          setQuiz(data);
+        }
+      } catch (error) {
+        console.error('Error loading quiz:', error);
+        if (isMounted) {
+          showError('Failed to load quiz');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadQuiz();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, showError]);
 
   const handleAnswerSelect = (questionId: string, answerId: string) => {
     setAnswers({

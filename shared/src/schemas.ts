@@ -16,7 +16,7 @@ export const MetricScoreSchema = z.object({
 export const AnswerSchema = z.object({
   id: z.string().min(1),
   text: z.string().min(1).max(500),
-  metricScores: z.array(MetricScoreSchema).min(1)
+  metricScores: z.array(MetricScoreSchema).min(1).max(50)
 });
 
 // Question Schema
