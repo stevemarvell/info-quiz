@@ -15,12 +15,29 @@ A professional quiz application with metric-based scoring built as a **monorepo*
 ### Git Workflow Standards
 
 **Branch Naming Convention:**
-Use standard prefixes for all branches:
+
+**For user-created branches**, use standard prefixes:
 - `feat/` - New features (e.g., `feat/quiz-pagination`, `feat/user-authentication`)
 - `fix/` - Bug fixes (e.g., `fix/api-endpoint-mismatch`, `fix/test-failures`)
 - `chore/` - Maintenance tasks (e.g., `chore/update-dependencies`, `chore/refactor-types`)
 - `docs/` - Documentation only (e.g., `docs/api-reference`, `docs/deployment-guide`)
 - `test/` - Test additions/fixes (e.g., `test/frontend-coverage`, `test/integration-tests`)
+
+**Claude Code Automated Branches**
+- Branches created by Claude Code **must start with** `claude/` (system requirement)
+- **Best practice:** Combine with standard prefixes: `claude/chore/`, `claude/fix/`, etc.
+- Must end with session ID (enforced by Claude Code)
+
+**Examples:**
+- `claude/chore/code-review-legacy-backlog-011CUu8kbtdxqtBik6phwXmc` - Maintenance/review work
+- `claude/fix/api-endpoint-mismatch-011CUu8kbtdxqtBik6phwXmc` - Bug fixes
+- `claude/feat/pagination-implementation-011CUu8kbtdxqtBik6phwXmc` - New features
+- `claude/test/frontend-coverage-011CUu8kbtdxqtBik6phwXmc` - Test additions
+
+**Why:**
+- Git push fails with 403 if branch doesn't start with `claude/` for automated workflows
+- Adding type prefix (chore/fix/feat) makes branch purpose clear
+- Maintains consistency with user branch naming conventions
 
 **Commit Message Format:**
 Use conventional commit format:
