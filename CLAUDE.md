@@ -4,10 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A professional quiz application with metric-based scoring built as a **monorepo** using npm workspaces. Three packages work together:
-- **shared**: Zod schemas and validators (single source of truth for types)
+A professional quiz application with metric-based scoring built as a **monorepo** using npm workspaces. Two packages:
 - **backend**: Node/Express API with Repository pattern and Dependency Injection
 - **frontend**: Ionic React app with React Hook Form
+
+**Note**: Shared types and schemas are duplicated in `backend/src/shared/` and `frontend/src/shared/` to enable independent deployment on platforms like Railway where each service is isolated.
 
 ## Development Standards
 
@@ -40,7 +41,7 @@ Every commit must meet these standards:
 
 5. **Architecture Compliance**
    - Follow established patterns (Repository, DI, three-layer)
-   - Update shared schemas first, then rebuild before backend/frontend changes
+   - When updating shared schemas, update BOTH backend/src/shared/ and frontend/src/shared/
    - Use proper error handling (try-catch, asyncHandler)
    - Add proper TypeScript types to all functions
 
@@ -60,6 +61,7 @@ Before every commit, verify:
 - [ ] User inputs are validated and sanitized
 - [ ] Tests added for new functionality
 - [ ] No debug code or console.logs
+- [ ] If updating schemas, both backend/src/shared/ and frontend/src/shared/ are updated
 
 **If ANY check fails, DO NOT COMMIT. Fix the issues first.**
 
@@ -68,7 +70,7 @@ Before every commit, verify:
 ### Running the App
 ```bash
 # Install all dependencies (run from root)
-npm install
+npm install --legacy-peer-deps
 
 # Start backend (Terminal 1)
 npm run dev:backend         # Runs on http://localhost:3000
@@ -79,19 +81,16 @@ npm run dev:frontend        # Runs on http://localhost:8100
 
 ### Building
 ```bash
-# Build all packages in order (shared → backend → frontend)
+# Build all packages
 npm run build
 
 # Build specific package
-npm run build:shared
 npm run build:backend
 npm run build:frontend
 
 # Build manually with workspace syntax
 npm run build --workspace=backend
 ```
-
-**IMPORTANT**: Always build `shared` first when making schema changes. Backend and frontend depend on the compiled output.
 
 ### Testing
 ```bash
@@ -100,16 +99,19 @@ npm test
 
 # Test specific workspace
 npm run test:backend
-npm run test:shared
+npm run test:frontend
 
 # Watch mode for TDD
 npm run test:watch --workspace=backend
 
 # Run with coverage
-npm test -- --coverage
+npm run test:backend
 
 # Run integration tests only (backend)
 npm run test:integration --workspace=backend
+
+# Run E2E tests (frontend)
+npm run test:e2e
 ```
 
 ### Type Checking and Linting
@@ -126,29 +128,29 @@ npm run lint --workspace=backend
 
 ## Critical Architecture Patterns
 
-### 1. Monorepo with Shared Types
+### 1. Shared Types and Schemas
 
-The `shared` package uses **Zod schemas** as the single source of truth:
+**Zod schemas** are the single source of truth for types and runtime validation:
 
 ```typescript
-// shared/src/schemas.ts
+// backend/src/shared/schemas.ts or frontend/src/shared/schemas.ts
 export const QuizSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1).max(200),
   // ...
 });
 
-// shared/src/types.ts
+// backend/src/shared/types.ts or frontend/src/shared/types.ts
 export type Quiz = z.infer<typeof QuizSchema>;
 ```
 
-**Both** frontend and backend import from `@quiz-app/shared`, ensuring type consistency at compile-time AND runtime validation.
+**IMPORTANT**: Shared code is duplicated in both `backend/src/shared/` and `frontend/src/shared/` for deployment simplicity.
 
 **Workflow for changing types**:
-1. Edit `shared/src/schemas.ts`
-2. Run `npm run build:shared`
-3. Types automatically update in backend/frontend via symlinks
-4. No need to manually sync types between packages
+1. Edit `backend/src/shared/schemas.ts` AND `frontend/src/shared/schemas.ts`
+2. Keep both versions synchronized
+3. Run builds to verify: `npm run build`
+4. Types automatically propagate through both packages
 
 ### 2. Repository Pattern (Backend)
 
@@ -242,9 +244,15 @@ const { fields, append, remove } = useFieldArray({ control, name: 'metrics' });
 - **`backend/src/middleware/sanitization.ts`**: XSS prevention (removes scripts, event handlers)
 - **`backend/src/middleware/errorHandler.ts`**: Centralized error handling with production/dev modes
 
+### Shared Code (Duplicated)
+
+- **`backend/src/shared/schemas.ts`**: Zod schemas for backend
+- **`backend/src/shared/validators.ts`**: Business logic validators
+- **`frontend/src/shared/schemas.ts`**: Zod schemas for frontend (same as backend)
+- **`frontend/src/shared/types.ts`**: TypeScript types derived from schemas
+
 ### Core Business Logic
 
-- **`shared/src/validators.ts`**: Business logic validators (consistency checks, relationships)
 - **`backend/src/services/QuizService.ts`**: Score calculation, response validation
 - **`backend/src/sampleData.ts`**: Pre-loaded wellbeing quiz with 10 questions
 
@@ -252,15 +260,16 @@ const { fields, append, remove } = useFieldArray({ control, name: 'metrics' });
 
 - **`backend/src/__tests__/routes.test.ts`**: Integration tests (full HTTP request/response)
 - **`backend/src/__tests__/sanitization.test.ts`**: Unit tests for XSS prevention
-- **`shared/src/__tests__/validators.test.ts`**: Schema validation tests
+- **`frontend/src/pages/__tests__/smoke.test.tsx`**: Basic rendering tests
 
 ## Common Workflows
 
 ### Adding a New API Endpoint
 
-1. Define types in `shared/src/schemas.ts` if needed
-2. Add service method in `QuizService` (business logic)
-3. Add route in `backend/src/routes.ts`:
+1. Define types in `backend/src/shared/schemas.ts` if needed
+2. If frontend needs the types, copy to `frontend/src/shared/schemas.ts`
+3. Add service method in `QuizService` (business logic)
+4. Add route in `backend/src/routes.ts`:
    ```typescript
    router.post('/endpoint',
      validateBody(YourSchema),  // Zod validation middleware
@@ -270,23 +279,24 @@ const { fields, append, remove } = useFieldArray({ control, name: 'metrics' });
      })
    );
    ```
-4. Add API client method in `frontend/src/services/api.ts`
-5. Write integration test in `backend/src/__tests__/routes.test.ts`
+5. Add API client method in `frontend/src/services/api.ts`
+6. Write integration test in `backend/src/__tests__/routes.test.ts`
 
 ### Changing Data Models
 
-1. Edit `shared/src/schemas.ts`:
+1. Edit `backend/src/shared/schemas.ts`:
    ```typescript
    export const QuizSchema = z.object({
      // ... existing fields
      newField: z.string().optional()  // Add new field
    });
    ```
-2. Build shared: `npm run build:shared`
-3. Update repositories if adding storage logic
-4. Update services if adding business logic
-5. Update frontend components if UI changes needed
-6. Types automatically propagate everywhere
+2. Copy changes to `frontend/src/shared/schemas.ts` to keep in sync
+3. Build both: `npm run build`
+4. Update repositories if adding storage logic
+5. Update services if adding business logic
+6. Update frontend components if UI changes needed
+7. Types automatically propagate everywhere
 
 ### Swapping Storage Implementation
 
@@ -331,7 +341,7 @@ expect(response.body.success).toBe(true);
   - 30 req/15min for POST/PUT/DELETE only
 - **Error Sanitization**: Production mode hides stack traces and internal details
 - **Input Validation**: All requests validated with Zod before reaching business logic
-- **Response Validation** (frontend): API responses validated with Zod for runtime type safety
+- **Response Validation** (backend): Types enforced by TypeScript
 
 ## Documentation References
 
@@ -340,6 +350,7 @@ expect(response.body.success).toBe(true);
 - **DEPLOYMENT.md**: Production deployment guides for various platforms
 - **API_DOCUMENTATION.md**: Complete API reference with examples
 - **REACT_HOOK_FORM.md**: Form handling patterns and migration guide
+- **MANUAL_TESTING_GUIDE.md**: Step-by-step manual testing procedures
 
 ## Production Considerations
 
@@ -353,3 +364,13 @@ expect(response.body.success).toBe(true);
 - No authentication (all endpoints public)
 
 See DEPLOYMENT.md for production deployment strategies.
+
+## Railway Deployment
+
+Since Railway deploys each service independently from its own directory:
+
+- **Backend**: Builds from `/backend` directory with `npm install --legacy-peer-deps && npm run build`
+- **Frontend**: Builds from `/frontend` directory with `npm install --legacy-peer-deps && npm run build`
+- **Shared code**: Duplicated in each service's `src/shared/` directory
+
+This ensures each service is completely self-contained and can build without access to other workspace packages.
