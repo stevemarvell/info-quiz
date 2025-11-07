@@ -31,7 +31,7 @@ export const api = {
 
   async submitQuiz(quizId: string, response: QuizResponse): Promise<QuizResult> {
     const result = await axios.post<ApiResponse<QuizResult>>(
-      `${API_BASE_URL}/quizzes/${quizId}/submit`,
+      `${API_BASE_URL}/quizzes/${quizId}/responses`,
       response
     );
     return result.data.data;
