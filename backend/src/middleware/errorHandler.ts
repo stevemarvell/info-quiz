@@ -37,7 +37,7 @@ export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   logger.error('Error occurred', {
     error: err.message,
@@ -48,7 +48,12 @@ export const errorHandler = (
   });
 
   if (err instanceof AppError) {
-    const response: any = {
+    const response: {
+      success: false;
+      error: string;
+      message: string;
+      details?: unknown;
+    } = {
       success: false,
       error: err.name,
       message: err.message

@@ -19,6 +19,7 @@ export const sanitizeString = (value: string): string => {
 /**
  * Recursively sanitize all string values in an object
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const sanitizeObject = (obj: any): any => {
   if (obj === null || obj === undefined) {
     return obj;
@@ -33,9 +34,10 @@ export const sanitizeObject = (obj: any): any => {
   }
 
   if (typeof obj === 'object') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sanitized: any = {};
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         sanitized[key] = sanitizeObject(obj[key]);
       }
     }
