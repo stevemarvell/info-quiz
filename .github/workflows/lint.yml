@@ -11,8 +11,8 @@ on:
       - develop
 
 jobs:
-  lint:
-    name: Run Linting
+  lint-backend:
+    name: Lint Backend
     runs-on: ubuntu-latest
 
     steps:
@@ -23,22 +23,47 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint backend
+        run: npm run lint --workspace=backend
+
+  lint-frontend:
+    name: Lint Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint frontend
+        run: npm run lint --workspace=frontend --if-present
+
+  lint-shared:
+    name: Lint Shared
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Lint shared package
         run: npm run lint --workspace=@quiz-app/shared --if-present
-
-      - name: Lint backend
-        run: npm run lint --workspace=backend
-
-      - name: Lint frontend
-        run: npm run lint --workspace=frontend --if-present
-
-      - name: Summary
-        if: always()
-        run: |
-          echo "✅ Linting checks completed"
-          echo "All code passes linting standards"

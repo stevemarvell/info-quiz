@@ -17,6 +17,8 @@ The repository has automated quality checks that run on every PR:
 
 **What it checks**:
 - ESLint rules on backend code
+- ESLint rules on frontend code
+- ESLint rules on shared code
 - Code formatting standards
 - No unused variables or imports
 
@@ -24,8 +26,13 @@ The repository has automated quality checks that run on every PR:
 - All PRs to `main` or `develop`
 - Direct pushes to `main` or `develop`
 
+**Jobs**:
+- `Lint Backend`: Checks backend code style
+- `Lint Frontend`: Checks frontend code style
+- `Lint Shared`: Checks shared package code style
+
 **Failure reasons**:
-- Linting errors in backend code
+- Linting errors in any package
 - Code style violations
 
 ---
@@ -85,7 +92,9 @@ To make these checks **required** for merging PRs, follow these steps:
   - ✅ Require branches to be up to date before merging
 
   **Add required status checks**:
-  - ✅ `Lint Check / Run Linting`
+  - ✅ `Lint Backend / Lint Backend`
+  - ✅ `Lint Frontend / Lint Frontend`
+  - ✅ `Lint Shared / Lint Shared`
   - ✅ `CI / Build and Test`
 
 - ✅ **Require conversation resolution before merging**
@@ -102,7 +111,8 @@ Click **Create** (or **Save changes**)
 
 ### If Linting Fails:
 ```bash
-❌ Lint Check / Run Linting — Failed
+❌ Lint Backend / Lint Backend — Failed
+❌ Lint Frontend / Lint Frontend — Failed
 ```
 
 **How to fix**:
@@ -131,9 +141,11 @@ npm run build
 npm test
 ```
 
-### If Both Pass:
+### If All Pass:
 ```bash
-✅ Lint Check / Run Linting — Passed
+✅ Lint Backend / Lint Backend — Passed
+✅ Lint Frontend / Lint Frontend — Passed
+✅ Lint Shared / Lint Shared — Passed
 ✅ CI / Build and Test — Passed
 ```
 
@@ -226,7 +238,9 @@ If you have admin access and need to bypass checks in an emergency:
 **Cause**: Check names don't match branch protection rules
 
 **Fix**: Update branch protection to match exact workflow names:
-- `Run Linting` (from lint.yml job)
+- `Lint Backend` (from lint.yml job)
+- `Lint Frontend` (from lint.yml job)
+- `Lint Shared` (from lint.yml job)
 - `Build and Test` (from ci.yml job)
 
 ---
