@@ -1,0 +1,19 @@
+[build]
+builder = "RAILPACK"
+buildCommand = "npm ci && npm run build"
+watchPaths = ["frontend/**"]
+
+[deploy]
+numReplicas = 1
+startCommand = "npm start"
+serverless = true
+restartPolicyType = "NEVER"
+restartPolicyMaxRetries = 0
+
+[deploy.healthcheck]
+path = "/"
+timeout = 100
+
+[deploy.resources]
+cpu = 0.5
+memory = 512
