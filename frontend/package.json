@@ -35,10 +35,10 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.0.4",
-    "@vitest/ui": "^4.0.8",
-    "jsdom": "^27.1.0",
+    "@vitest/ui": "^1.6.0",
+    "jsdom": "^24.1.0",
     "typescript": "^5.1.6",
     "vite": "^4.4.9",
-    "vitest": "^4.0.8"
+    "vitest": "^1.6.0"
   }
 }
