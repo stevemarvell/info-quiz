@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { QuizSchema, QuizResponseSchema } from '@quiz-app/shared';
+import { QuizSchema, QuizResponseSchema } from './shared';
 import { QuizService } from './services/QuizService';
 import { AppError, asyncHandler } from './middleware/errorHandler';
 import { validateBody } from './middleware/validation';

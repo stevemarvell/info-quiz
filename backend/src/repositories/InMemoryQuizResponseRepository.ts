@@ -1,4 +1,4 @@
-import { QuizResponse, QuizResult } from '@quiz-app/shared';
+import { QuizResponse, QuizResult } from '../shared';
 import { IQuizResponseRepository } from './IQuizResponseRepository';
 import { logger } from '../utils/logger';
 

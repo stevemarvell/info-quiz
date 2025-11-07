@@ -1,5 +1,5 @@
 import { InMemoryQuizRepository } from '../repositories/InMemoryQuizRepository';
-import { Quiz } from '@quiz-app/shared';
+import { Quiz } from '../shared';
 
 describe('InMemoryQuizRepository', () => {
   let repository: InMemoryQuizRepository;

@@ -1,7 +1,7 @@
 [build]
 builder = "RAILPACK"
-buildCommand = "cd .. && npm install --legacy-peer-deps && npm run build:shared && npm run build:backend"
-watchPaths = ["backend/**", "shared/**"]
+buildCommand = "npm install --legacy-peer-deps && npm run build"
+watchPaths = ["backend/**"]
 
 [deploy]
 numReplicas = 1

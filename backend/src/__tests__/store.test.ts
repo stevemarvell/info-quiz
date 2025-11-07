@@ -1,5 +1,5 @@
 import { InMemoryQuizStore } from '../store';
-import { Quiz } from '@quiz-app/shared';
+import { Quiz } from '../shared';
 
 describe('InMemoryQuizStore', () => {
   let store: InMemoryQuizStore;

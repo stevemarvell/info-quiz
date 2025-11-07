@@ -1,4 +1,4 @@
-import { QuizResponse, QuizResult } from '@quiz-app/shared';
+import { QuizResponse, QuizResult } from '../shared';
 
 export interface IQuizResponseRepository {
   save(response: QuizResponse, result: QuizResult): Promise<void>;

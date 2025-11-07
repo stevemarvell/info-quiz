@@ -1,7 +1,7 @@
 import { QuizService } from '../services/QuizService';
 import { InMemoryQuizRepository } from '../repositories/InMemoryQuizRepository';
 import { InMemoryQuizResponseRepository } from '../repositories/InMemoryQuizResponseRepository';
-import { Quiz, QuizResponse } from '@quiz-app/shared';
+import { Quiz, QuizResponse } from '../shared';
 
 describe('QuizService', () => {
   let service: QuizService;

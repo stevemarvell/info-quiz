@@ -1,4 +1,4 @@
-import { Quiz } from '@quiz-app/shared';
+import { Quiz } from '../shared';
 
 export interface IQuizRepository {
   findAll(): Promise<Quiz[]>;

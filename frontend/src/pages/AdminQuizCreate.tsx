@@ -23,7 +23,7 @@ import {
 } from '@ionic/react';
 import { add, trash } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { Quiz } from '@quiz-app/shared';
+import { Quiz } from '../shared';
 import { api } from '../services/api';
 import { FormField } from '../components/FormField';
 import { useToast } from '../hooks/useToast';
