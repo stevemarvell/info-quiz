@@ -1,4 +1,5 @@
-import { sanitizeString, sanitizeObject } from '../middleware/sanitization';
+import { Request, Response, NextFunction } from 'express';
+import { sanitizeString, sanitizeObject, sanitizeInput } from '../middleware/sanitization';
 
 describe('Sanitization Middleware', () => {
   describe('sanitizeString', () => {
@@ -92,6 +93,76 @@ describe('Sanitization Middleware', () => {
       const output = sanitizeObject(input);
       expect(output.nullValue).toBeNull();
       expect(output.undefinedValue).toBeUndefined();
+    });
+  });
+
+  describe('sanitizeInput middleware', () => {
+    let mockReq: Partial<Request>;
+    let mockRes: Partial<Response>;
+    let mockNext: NextFunction;
+
+    beforeEach(() => {
+      mockReq = {};
+      mockRes = {};
+      mockNext = jest.fn();
+    });
+
+    it('should sanitize request body when present', () => {
+      mockReq.body = {
+        title: '<script>alert("xss")</script>',
+        description: 'Normal text'
+      };
+
+      sanitizeInput(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.body.title).not.toContain('<script>');
+      expect(mockReq.body.description).toBe('Normal text');
+      expect(mockNext).toHaveBeenCalled();
+    });
+
+    it('should sanitize request query when present', () => {
+      mockReq.query = {
+        search: '<script>alert("xss")</script>',
+        filter: 'normal'
+      };
+
+      sanitizeInput(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.query.search).not.toContain('<script>');
+      expect(mockReq.query.filter).toBe('normal');
+      expect(mockNext).toHaveBeenCalled();
+    });
+
+    it('should sanitize request params when present', () => {
+      mockReq.params = {
+        id: '<script>alert("xss")</script>',
+        name: 'normal'
+      };
+
+      sanitizeInput(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.params.id).not.toContain('<script>');
+      expect(mockReq.params.name).toBe('normal');
+      expect(mockNext).toHaveBeenCalled();
+    });
+
+    it('should handle request with no body, query, or params', () => {
+      sanitizeInput(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+    });
+
+    it('should sanitize all three when all are present', () => {
+      mockReq.body = { title: '<script>xss</script>' };
+      mockReq.query = { search: '<script>xss</script>' };
+      mockReq.params = { id: '<script>xss</script>' };
+
+      sanitizeInput(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.body.title).not.toContain('<script>');
+      expect(mockReq.query.search).not.toContain('<script>');
+      expect(mockReq.params.id).not.toContain('<script>');
+      expect(mockNext).toHaveBeenCalled();
     });
   });
 });

@@ -348,4 +348,200 @@ describe('QuizService', () => {
       expect(result.metricScores[0].percentage).toBe(41.7);
     });
   });
+
+  describe('createQuiz', () => {
+    it('should throw error when quiz has invalid metric references', async () => {
+      const invalidQuiz: Quiz = {
+        id: 'invalid-quiz',
+        title: 'Invalid Quiz',
+        description: 'Test',
+        metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
+        questions: [
+          {
+            id: 'q1',
+            text: 'Question 1',
+            answers: [
+              {
+                id: 'a1',
+                text: 'Answer 1',
+                metricScores: [{ metricId: 'invalid-metric', score: 5 }]
+              },
+              {
+                id: 'a2',
+                text: 'Answer 2',
+                metricScores: [{ metricId: 'm1', score: 3 }]
+              }
+            ]
+          }
+        ]
+      };
+
+      await expect(service.createQuiz(invalidQuiz)).rejects.toThrow('Quiz validation failed');
+    });
+  });
+
+  describe('updateQuiz', () => {
+    it('should throw error when quiz has invalid consistency', async () => {
+      const invalidQuiz: Quiz = {
+        id: 'invalid-quiz',
+        title: 'Invalid Quiz',
+        description: 'Test',
+        metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
+        questions: [
+          {
+            id: 'q1',
+            text: 'Question 1',
+            answers: [
+              {
+                id: 'a1',
+                text: 'Answer 1',
+                metricScores: [{ metricId: 'wrong-metric', score: 5 }]
+              },
+              {
+                id: 'a2',
+                text: 'Answer 2',
+                metricScores: [{ metricId: 'm1', score: 3 }]
+              }
+            ]
+          }
+        ]
+      };
+
+      await expect(service.updateQuiz('test-id', invalidQuiz)).rejects.toThrow(
+        'Quiz validation failed'
+      );
+    });
+  });
+
+  describe('submitQuizResponse', () => {
+    const validQuiz: Quiz = {
+      id: 'test-quiz',
+      title: 'Test Quiz',
+      description: 'Test',
+      metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
+      questions: [
+        {
+          id: 'q1',
+          text: 'Question 1',
+          answers: [
+            {
+              id: 'a1',
+              text: 'Answer 1',
+              metricScores: [{ metricId: 'm1', score: 5 }]
+            },
+            {
+              id: 'a2',
+              text: 'Answer 2',
+              metricScores: [{ metricId: 'm1', score: 3 }]
+            }
+          ]
+        }
+      ]
+    };
+
+    beforeEach(async () => {
+      await quizRepository.create(validQuiz);
+    });
+
+    it('should throw error when quiz not found', async () => {
+      const response: QuizResponse = {
+        quizId: 'nonexistent-quiz',
+        answers: [{ questionId: 'q1', answerId: 'a1' }]
+      };
+
+      await expect(service.submitQuizResponse('nonexistent-quiz', response)).rejects.toThrow(
+        'Quiz not found'
+      );
+    });
+
+    it('should throw error when response has invalid question id', async () => {
+      const response: QuizResponse = {
+        quizId: 'test-quiz',
+        answers: [{ questionId: 'invalid-q', answerId: 'a1' }]
+      };
+
+      await expect(service.submitQuizResponse('test-quiz', response)).rejects.toThrow(
+        'Invalid quiz response'
+      );
+    });
+  });
+
+  describe('calculateResults with invalid data', () => {
+    it('should handle invalid question id in response', () => {
+      const quiz: Quiz = {
+        id: 'test-quiz',
+        title: 'Test Quiz',
+        description: 'Test',
+        metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
+        questions: [
+          {
+            id: 'q1',
+            text: 'Question 1',
+            answers: [
+              {
+                id: 'a1',
+                text: 'Answer 1',
+                metricScores: [{ metricId: 'm1', score: 5 }]
+              },
+              {
+                id: 'a2',
+                text: 'Answer 2',
+                metricScores: [{ metricId: 'm1', score: 3 }]
+              }
+            ]
+          }
+        ]
+      };
+
+      const response: QuizResponse = {
+        quizId: 'test-quiz',
+        answers: [
+          { questionId: 'q1', answerId: 'a1' },
+          { questionId: 'invalid-question', answerId: 'a1' } // Invalid question
+        ]
+      };
+
+      const result = service.calculateResults(quiz, response);
+
+      // Should still calculate correctly, ignoring invalid question
+      expect(result.metricScores[0].totalScore).toBe(5);
+    });
+
+    it('should handle invalid answer id in response', () => {
+      const quiz: Quiz = {
+        id: 'test-quiz',
+        title: 'Test Quiz',
+        description: 'Test',
+        metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
+        questions: [
+          {
+            id: 'q1',
+            text: 'Question 1',
+            answers: [
+              {
+                id: 'a1',
+                text: 'Answer 1',
+                metricScores: [{ metricId: 'm1', score: 5 }]
+              },
+              {
+                id: 'a2',
+                text: 'Answer 2',
+                metricScores: [{ metricId: 'm1', score: 3 }]
+              }
+            ]
+          }
+        ]
+      };
+
+      const response: QuizResponse = {
+        quizId: 'test-quiz',
+        answers: [{ questionId: 'q1', answerId: 'invalid-answer' }] // Invalid answer
+      };
+
+      const result = service.calculateResults(quiz, response);
+
+      // Should still calculate correctly, ignoring invalid answer
+      expect(result.metricScores[0].totalScore).toBe(0);
+    });
+  });
 });
