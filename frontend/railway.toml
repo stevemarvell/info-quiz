@@ -1,6 +1,6 @@
 [build]
 builder = "RAILPACK"
-buildCommand = "npm ci && npm run build"
+buildCommand = "cd .. && npm install --legacy-peer-deps && npm run build:frontend"
 watchPaths = ["frontend/**"]
 
 [deploy]
