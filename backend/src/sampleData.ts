@@ -1,7 +1,8 @@
-import { store } from './store';
-import { Quiz } from './types';
+import { IQuizStore } from './interfaces/IQuizStore';
+import { Quiz } from '@quiz-app/shared';
+import { logger } from './utils/logger';
 
-export function initializeSampleData() {
+export function initializeSampleData(quizRepository: IQuizRepository) {
   const wellbeingQuiz: Quiz = {
     id: 'wellbeing-quiz-1',
     title: 'Wellbeing Assessment',
@@ -346,6 +347,6 @@ export function initializeSampleData() {
     ]
   };
 
-  store.createQuiz(wellbeingQuiz);
-  console.log('Sample wellbeing quiz created');
+  quizRepository.create(wellbeingQuiz);
+  logger.info('Sample wellbeing quiz created');
 }
