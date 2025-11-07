@@ -2,6 +2,10 @@
 
 > A professional, production-ready application for creating and taking quizzes with metric-based scoring and personalized reporting.
 
+[![Lint Check](https://github.com/stevemarvell/info-quiz/workflows/Lint%20Check/badge.svg)](https://github.com/stevemarvell/info-quiz/actions/workflows/lint.yml)
+[![CI](https://github.com/stevemarvell/info-quiz/workflows/CI/badge.svg)](https://github.com/stevemarvell/info-quiz/actions/workflows/ci.yml)
+[![Claude Code Review](https://github.com/stevemarvell/info-quiz/workflows/Claude%20Code%20Review/badge.svg)](https://github.com/stevemarvell/info-quiz/actions/workflows/claude-code-review.yml)
+
 ## Overview
 
 This is an **enterprise-grade** quiz application built with modern architecture patterns including:
@@ -65,6 +69,9 @@ This is an **enterprise-grade** quiz application built with modern architecture 
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System design, patterns, and architectural decisions
 - **[TESTING.md](./TESTING.md)** - Comprehensive testing strategy (unit, integration, E2E, contract)
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide for various platforms
+- **[CLAUDE.md](./CLAUDE.md)** - Development standards and zero-issue policy
+- **[PR_PROTECTION.md](./.github/PR_PROTECTION.md)** - Required checks and branch protection setup
+- **[FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md)** - Planned features and enhancements
 
 ## 🏗️ Project Structure
 
@@ -430,13 +437,62 @@ This application is production-ready with:
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Write tests for your changes
-4. Ensure tests pass (`npm test`)
-5. Commit changes (`git commit -m 'Add amazing feature'`)
-6. Push to branch (`git push origin feature/amazing-feature`)
-7. Open Pull Request
+### Before You Start
+All pull requests must pass automated checks before merging:
+- ✅ **Lint Check** - Code style enforcement
+- ✅ **CI Check** - Build, type-check, and tests
+- ✅ **Claude Code Review** - AI-powered code review (informational)
+
+See [PR Protection Guide](.github/PR_PROTECTION.md) for details.
+
+### Development Workflow
+
+1. **Fork the repository**
+
+2. **Create feature branch**
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+
+3. **Make your changes** following [CLAUDE.md](CLAUDE.md) standards
+
+4. **Run quality checks locally**
+   ```bash
+   npm run type-check  # Type checking
+   npm run lint        # Linting
+   npm run build       # Build all packages
+   npm test            # Run all tests
+   ```
+
+5. **Commit changes** (use descriptive messages)
+   ```bash
+   git commit -m 'Add amazing feature'
+   ```
+
+6. **Push to your fork**
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+
+7. **Open Pull Request**
+   - Automated checks will run automatically
+   - Address any failing checks before requesting review
+   - Respond to Claude Code Review feedback
+
+### Required Checks for Merging
+
+Your PR **cannot be merged** until:
+- ✅ All linting passes (`npm run lint`)
+- ✅ All tests pass (`npm test`)
+- ✅ Build succeeds (`npm run build`)
+- ✅ Type checking passes (`npm run type-check`)
+- ✅ At least 1 approval from maintainer
+
+### Quick Pre-Push Check
+```bash
+# Run this before pushing to catch issues early
+npm run type-check && npm run lint && npm test
+```
 
 ## 📄 License
 

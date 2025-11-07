@@ -1,5 +1,5 @@
 import { IQuizRepository } from './repositories/IQuizRepository';
-import { Quiz } from '@quiz-app/shared';
+import { Quiz } from './shared';
 import { logger } from './utils/logger';
 
 export function initializeSampleData(quizRepository: IQuizRepository) {

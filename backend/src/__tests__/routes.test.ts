@@ -5,7 +5,7 @@ import { QuizService } from '../services/QuizService';
 import { InMemoryQuizRepository } from '../repositories/InMemoryQuizRepository';
 import { InMemoryQuizResponseRepository } from '../repositories/InMemoryQuizResponseRepository';
 import { errorHandler } from '../middleware/errorHandler';
-import { Quiz } from '@quiz-app/shared';
+import { Quiz } from '../shared';
 
 describe('Quiz API Routes', () => {
   let app: express.Application;

@@ -10,7 +10,7 @@ import {
   setupIonicReact
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { create, list, statsChart } from 'ionicons/icons';
+import { create, list } from 'ionicons/icons';
 
 import Home from './pages/Home';
 import AdminQuizList from './pages/AdminQuizList';

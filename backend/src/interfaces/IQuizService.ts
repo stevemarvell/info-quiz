@@ -1,4 +1,4 @@
-import { Quiz, QuizResponse, QuizResult } from '@quiz-app/shared';
+import { Quiz, QuizResponse, QuizResult } from '../shared';
 
 export interface IQuizService {
   calculateResults(quiz: Quiz, response: QuizResponse): QuizResult;

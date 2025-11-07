@@ -1,5 +1,5 @@
-import { Quiz, QuizResponse, QuizResult } from '@quiz-app/shared';
-import { Validator } from '@quiz-app/shared';
+import { Quiz, QuizResponse, QuizResult } from '../shared';
+import { Validator } from '../shared';
 import { IQuizRepository } from '../repositories/IQuizRepository';
 import { IQuizResponseRepository } from '../repositories/IQuizResponseRepository';
 import { AppError } from '../middleware/errorHandler';
