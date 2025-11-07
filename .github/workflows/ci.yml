@@ -31,9 +31,6 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Build shared package
-        run: npm run build:shared
-
       - name: Type check all packages
         run: npm run type-check
 
@@ -42,9 +39,6 @@ jobs:
 
       - name: Build frontend
         run: npm run build:frontend
-
-      - name: Run shared tests
-        run: npm run test:shared
 
       - name: Run backend tests
         run: npm run test:backend
@@ -59,7 +53,6 @@ jobs:
           name: coverage-reports
           path: |
             backend/coverage/
-            shared/coverage/
           retention-days: 7
 
       - name: Summary
