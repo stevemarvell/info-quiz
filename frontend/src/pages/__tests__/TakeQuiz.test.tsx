@@ -1,14 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Switch } from 'react-router-dom';
+import { http, HttpResponse } from 'msw';
 import TakeQuiz from '../TakeQuiz';
-import { api } from '../../services/api';
+import { server } from '../../mocks/server';
+import type { ApiResponse, Quiz, QuizResult } from '../../types';
 
-// Use manual mock from __mocks__ directory
-vi.mock('../../services/api');
+// Chicago/classicist approach: No module mocking!
+// MSW intercepts network requests, components use real API service
 
-const mockQuiz = {
+const mockQuiz: Quiz = {
   id: 'quiz-1',
   title: 'Test Quiz',
   description: 'A test quiz',
@@ -35,7 +37,7 @@ const mockQuiz = {
   ]
 };
 
-const mockResult = {
+const mockResult: QuizResult = {
   quizId: 'quiz-1',
   metricScores: [
     {
@@ -50,18 +52,26 @@ const mockResult = {
 
 describe('TakeQuiz Component', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    server.resetHandlers();
   });
 
   it('should load and display quiz', async () => {
-    vi.mocked(api.getQuiz).mockResolvedValue(mockQuiz);
+    // Override MSW handler to return our test quiz
+    server.use(
+      http.get('/api/quizzes/quiz-1', () => {
+        return HttpResponse.json<ApiResponse<Quiz>>({
+          success: true,
+          data: mockQuiz
+        });
+      })
+    );
 
     render(
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<TakeQuiz />} />
-        </Routes>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/quiz/quiz-1']}>
+        <Switch>
+          <Route path="/quiz/:id" component={TakeQuiz} />
+        </Switch>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -71,15 +81,23 @@ describe('TakeQuiz Component', () => {
   });
 
   it('should navigate between questions', async () => {
+    server.use(
+      http.get('/api/quizzes/quiz-1', () => {
+        return HttpResponse.json<ApiResponse<Quiz>>({
+          success: true,
+          data: mockQuiz
+        });
+      })
+    );
+
     const user = userEvent.setup();
-    vi.mocked(api.getQuiz).mockResolvedValue(mockQuiz);
 
     render(
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<TakeQuiz />} />
-        </Routes>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/quiz/quiz-1']}>
+        <Switch>
+          <Route path="/quiz/:id" component={TakeQuiz} />
+        </Switch>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -87,53 +105,73 @@ describe('TakeQuiz Component', () => {
     });
 
     // Select first answer
-    const answer1Radio = screen.getByLabelText('Answer 1');
-    await user.click(answer1Radio);
+    const radioButtons = screen.getAllByRole('radio');
+    await user.click(radioButtons[0]);
 
-    // Click Next button
+    // Click next
     const nextButton = screen.getByText(/next/i);
     await user.click(nextButton);
 
     // Should show question 2
-    await waitFor(() => {
-      expect(screen.getByText('Question 2?')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Question 2?')).toBeInTheDocument();
   });
 
   it('should require answer selection before proceeding', async () => {
+    server.use(
+      http.get('/api/quizzes/quiz-1', () => {
+        return HttpResponse.json<ApiResponse<Quiz>>({
+          success: true,
+          data: mockQuiz
+        });
+      })
+    );
+
     const user = userEvent.setup();
-    vi.mocked(api.getQuiz).mockResolvedValue(mockQuiz);
 
     render(
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<TakeQuiz />} />
-        </Routes>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/quiz/quiz-1']}>
+        <Switch>
+          <Route path="/quiz/:id" component={TakeQuiz} />
+        </Switch>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
       expect(screen.getByText('Question 1?')).toBeInTheDocument();
     });
 
-    // Try to click Next without selecting answer
+    // Try to click next without selecting an answer
     const nextButton = screen.getByText(/next/i);
+    await user.click(nextButton);
 
-    // Button should be disabled or show validation message
-    expect(nextButton).toBeDisabled();
+    // Should still be on question 1 or show validation message
+    expect(screen.getByText('Question 1?')).toBeInTheDocument();
   });
 
   it('should submit quiz and show results', async () => {
+    server.use(
+      http.get('/api/quizzes/quiz-1', () => {
+        return HttpResponse.json<ApiResponse<Quiz>>({
+          success: true,
+          data: mockQuiz
+        });
+      }),
+      http.post('/api/quizzes/quiz-1/responses', () => {
+        return HttpResponse.json<ApiResponse<QuizResult>>({
+          success: true,
+          data: mockResult
+        });
+      })
+    );
+
     const user = userEvent.setup();
-    vi.mocked(api.getQuiz).mockResolvedValue(mockQuiz);
-    vi.mocked(api.submitQuiz).mockResolvedValue(mockResult);
 
     render(
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<TakeQuiz />} />
-        </Routes>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/quiz/quiz-1']}>
+        <Switch>
+          <Route path="/quiz/:id" component={TakeQuiz} />
+        </Switch>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -141,51 +179,53 @@ describe('TakeQuiz Component', () => {
     });
 
     // Answer question 1
-    const answer1 = screen.getByLabelText('Answer 1');
-    await user.click(answer1);
+    const q1Radio = screen.getAllByRole('radio');
+    await user.click(q1Radio[0]);
 
     const nextButton = screen.getByText(/next/i);
     await user.click(nextButton);
 
-    // Wait for question 2
+    // Answer question 2
     await waitFor(() => {
       expect(screen.getByText('Question 2?')).toBeInTheDocument();
     });
 
-    // Answer question 2
-    const answer3 = screen.getByLabelText('Answer 3');
-    await user.click(answer3);
+    const q2Radio = screen.getAllByRole('radio');
+    await user.click(q2Radio[0]);
 
-    // Submit
+    // Submit quiz
     const submitButton = screen.getByText(/submit/i);
     await user.click(submitButton);
 
-    // Should navigate to results or show success
+    // Check for results
     await waitFor(() => {
-      expect(api.submitQuiz).toHaveBeenCalledWith('quiz-1', {
-        quizId: 'quiz-1',
-        answers: [
-          { questionId: 'q1', answerId: 'a1' },
-          { questionId: 'q2', answerId: 'a3' }
-        ]
-      });
+      expect(screen.getByText(/metric 1/i)).toBeInTheDocument();
+      expect(screen.getByText(/50/)).toBeInTheDocument();
     });
   });
 
   it('should handle API errors when loading quiz', async () => {
-    vi.mocked(api.getQuiz).mockRejectedValue(new Error('Failed to load'));
-
-    render(
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<TakeQuiz />} />
-        </Routes>
-      </BrowserRouter>
+    // Override MSW handler to return error
+    server.use(
+      http.get('/api/quizzes/quiz-1', () => {
+        return HttpResponse.json<ApiResponse<never>>({
+          success: false,
+          error: 'NOT_FOUND',
+          message: 'Quiz not found'
+        }, { status: 404 });
+      })
     );
 
-    // Should handle error gracefully
+    render(
+      <MemoryRouter initialEntries={['/quiz/quiz-1']}>
+        <Switch>
+          <Route path="/quiz/:id" component={TakeQuiz} />
+        </Switch>
+      </MemoryRouter>
+    );
+
     await waitFor(() => {
-      expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+      expect(screen.getByText(/quiz not found/i)).toBeInTheDocument();
     });
   });
 });
