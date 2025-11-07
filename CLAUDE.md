@@ -15,12 +15,20 @@ A professional quiz application with metric-based scoring built as a **monorepo*
 ### Git Workflow Standards
 
 **Branch Naming Convention:**
-Use standard prefixes for all branches:
+
+**For user-created branches**, use standard prefixes:
 - `feat/` - New features (e.g., `feat/quiz-pagination`, `feat/user-authentication`)
 - `fix/` - Bug fixes (e.g., `fix/api-endpoint-mismatch`, `fix/test-failures`)
 - `chore/` - Maintenance tasks (e.g., `chore/update-dependencies`, `chore/refactor-types`)
 - `docs/` - Documentation only (e.g., `docs/api-reference`, `docs/deployment-guide`)
 - `test/` - Test additions/fixes (e.g., `test/frontend-coverage`, `test/integration-tests`)
+
+**Exception: Claude Code Automated Branches**
+- Branches created by Claude Code use the `claude/` prefix followed by a session ID
+- Example: `claude/code-review-legacy-backlog-011CUu8kbtdxqtBik6phwXmc`
+- This is a **system requirement** for Claude Code automation
+- Git push will fail with 403 error if branches don't follow this format for automated workflows
+- These branches are for code review, automated fixes, and backlog generation
 
 **Commit Message Format:**
 Use conventional commit format:
