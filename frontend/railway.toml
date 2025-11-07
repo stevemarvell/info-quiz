@@ -5,7 +5,7 @@ watchPaths = ["frontend/**", "shared/**"]
 
 [deploy]
 numReplicas = 1
-startCommand = "npm start"
+startCommand = "cd .. && npm start --workspace=frontend"
 serverless = true
 restartPolicyType = "NEVER"
 restartPolicyMaxRetries = 0
