@@ -7,6 +7,10 @@ dist/
 build/
 *.log
 
+# Test coverage
+coverage/
+*.lcov
+
 # Environment
 .env
 .env.local

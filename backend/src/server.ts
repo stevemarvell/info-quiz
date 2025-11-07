@@ -46,6 +46,15 @@ const writeLimiter = rateLimit({
   skip: (req) => req.method === 'GET', // Only apply to non-GET requests
 });
 
+// Health check rate limiter - more permissive for monitoring systems
+const healthLimiter = rateLimit({
+  windowMs: RATE_LIMITS.WINDOW_MS,
+  max: RATE_LIMITS.MAX_REQUESTS_GENERAL * 2, // 200 requests per 15 minutes
+  message: { success: false, error: 'TooManyRequests', message: 'Too many health check requests' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use('/api', generalLimiter);
 app.use('/api', writeLimiter);
 
@@ -84,8 +93,8 @@ initializeSampleData(quizRepository);
 const router = createRouter(quizService);
 app.use('/api', router);
 
-// Health check
-app.get('/health', (req, res) => {
+// Health check (with rate limiting)
+app.get('/health', healthLimiter, (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),

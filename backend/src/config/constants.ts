@@ -7,6 +7,7 @@
 export const SCORING = {
   MAX_SCORE_PER_QUESTION: 5,
   MIN_SCORE_PER_QUESTION: 0,
+  PERCENTAGE_DECIMAL_PLACES: 1, // Round percentages to 1 decimal place
 } as const;
 
 // Rate Limiting Constants
@@ -23,6 +24,6 @@ export const TIMEOUTS = {
 
 // Request Size Limits
 export const REQUEST_LIMITS = {
-  JSON_LIMIT: '10mb',
-  URL_ENCODED_LIMIT: '10mb',
+  JSON_LIMIT: '1mb',
+  URL_ENCODED_LIMIT: '1mb',
 } as const;

@@ -73,7 +73,30 @@ export class QuizService {
       metricTotals.set(metric.id, 0);
     });
 
-    // Calculate scores based on answers
+    // Calculate actual maximum possible score per metric
+    // For each question, find the highest score available for each metric
+    const metricMaxScores = new Map<string, number>();
+    quiz.metrics.forEach(metric => metricMaxScores.set(metric.id, 0));
+
+    quiz.questions.forEach(question => {
+      const questionMaxPerMetric = new Map<string, number>();
+
+      // Find max score for each metric in this question's answers
+      question.answers.forEach(answer => {
+        answer.metricScores.forEach(ms => {
+          const current = questionMaxPerMetric.get(ms.metricId) || 0;
+          questionMaxPerMetric.set(ms.metricId, Math.max(current, ms.score));
+        });
+      });
+
+      // Add this question's max to the total max for each metric
+      questionMaxPerMetric.forEach((maxScore, metricId) => {
+        const total = metricMaxScores.get(metricId) || 0;
+        metricMaxScores.set(metricId, total + maxScore);
+      });
+    });
+
+    // Calculate scores based on user's answers
     response.answers.forEach(answer => {
       const question = quiz.questions.find(q => q.id === answer.questionId);
       if (question) {
@@ -87,12 +110,13 @@ export class QuizService {
       }
     });
 
-    // Build result with max score per question per metric
+    // Build result with dynamically calculated max scores
+    const percentageMultiplier = Math.pow(10, SCORING.PERCENTAGE_DECIMAL_PLACES);
     const result: QuizResult = {
       quizId: quiz.id,
       metricScores: quiz.metrics.map(metric => {
         const totalScore = metricTotals.get(metric.id) || 0;
-        const maxScore = quiz.questions.length * SCORING.MAX_SCORE_PER_QUESTION;
+        const maxScore = metricMaxScores.get(metric.id) || 0;
         const percentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
 
         return {
@@ -100,7 +124,7 @@ export class QuizService {
           metricName: metric.name,
           totalScore,
           maxScore,
-          percentage: Math.round(percentage * 10) / 10
+          percentage: Math.round(percentage * percentageMultiplier) / percentageMultiplier
         };
       })
     };
