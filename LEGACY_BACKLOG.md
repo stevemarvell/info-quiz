@@ -1,23 +1,26 @@
 # Legacy Backlog
 
 **Generated:** 2025-11-07
-**Last Updated:** 2025-11-07
+**Last Updated:** 2025-11-07 (Updated with MSW implementation and CRITICAL-4 resolution)
 **Code Review Scope:** Full codebase (backend, frontend, tests, configuration)
-**Total Issues Identified:** 46 (2 remaining critical)
+**Total Issues Identified:** 46 (1 remaining critical)
 
 ## Executive Summary
 
-This backlog contains 46 issues identified through comprehensive code review, organized by priority. The codebase has solid architectural foundations (Repository pattern, DI, three-layer architecture) and good backend test coverage (94.36%), but has several critical issues preventing production deployment:
+This backlog contains 46 issues identified through comprehensive code review, organized by priority. The codebase has solid architectural foundations (Repository pattern, DI, three-layer architecture) and good backend test coverage (94.36%), but has one remaining critical issue preventing production deployment:
 
-- **2 CRITICAL issues remaining** (2 resolved: shared package, API endpoint mismatch)
+- **1 CRITICAL issue remaining** (CRITICAL-2: MSW test infrastructure hanging)
+- **3 CRITICAL issues resolved** (shared package, API endpoint mismatch, error handling)
 - **6 HIGH priority issues** affecting maintainability and user experience
 - **36 additional issues** spanning security, performance, documentation, and code quality
 
-**Immediate Action Required:** Fix Phase 1 issues (#2, #4) before any deployment.
+**Immediate Action Required:** Debug MSW hanging issue (CRITICAL-2) before any deployment.
 
 **Recent Changes:**
 - ✅ **CRITICAL-1 RESOLVED**: Fixed API endpoint mismatch. Frontend now uses `/responses` endpoint matching backend.
 - ✅ **CRITICAL-3 RESOLVED**: Removed defunct `/shared` package directory. Controlled duplication strategy documented in CLAUDE.md.
+- ✅ **CRITICAL-4 RESOLVED**: Fixed error handling in InMemoryQuizRepository. Now uses AppError with proper 409 status code.
+- ⚠️ **CRITICAL-2 IN PROGRESS**: Implemented MSW (Chicago/classicist testing), but tests hang. Infrastructure complete, needs debugging.
 - ✅ **Development Standards Updated**: Added branch naming conventions (feat/, fix/, chore/) and consistency standards to CLAUDE.md.
 
 ---
@@ -70,38 +73,55 @@ Quiz submission functionality is now properly connected. Frontend can successful
 
 ---
 
-### CRITICAL-2: Frontend Test Suite Failures (9/12 Tests)
+### CRITICAL-2: Frontend Test Suite Failures - MSW Implementation ⚠️ **IN PROGRESS**
 **Priority:** CRITICAL
-**Impact:** No test coverage for critical user flows
-**Effort:** 30 minutes
+**Impact:** No test coverage for critical user flows - tests hang/timeout
+**Effort:** 30 minutes → **Updated: 1-2 hours**
+**Status:** ⚠️ **IN PROGRESS** - MSW infrastructure implemented but tests hanging
 
-**Description:**
-Frontend tests failing due to API mocking issues:
-- Home.test.tsx: 4/4 tests failing
-- TakeQuiz.test.tsx: 5/5 tests failing
-- Root cause: Tests reference `api.getQuizzes` but actual method is `api.getAllQuizzes`
+**Progress Made:**
+- ✅ Implemented MSW (Mock Service Worker) for Chicago/classicist testing approach
+- ✅ Created `/frontend/src/mocks/handlers.ts` - Network-level request handlers
+- ✅ Created `/frontend/src/mocks/server.ts` - MSW server setup for Node/Vitest
+- ✅ Updated `/frontend/src/test/setup.ts` - MSW lifecycle hooks
+- ✅ Converted TakeQuiz.test.tsx to use MSW and MemoryRouter
+- ✅ Converted AdminQuizCreate.test.tsx to use MemoryRouter
+- ✅ Fixed React Router v5 compatibility (Routes→Switch, element→component)
+- ✅ No more "Element type is invalid" errors
+- ✅ 4 tests passing (smoke tests + 1 Home test)
+
+**Current Issue:**
+- ❌ Tests hang/timeout instead of completing
+- ❌ TakeQuiz and AdminQuizCreate tests wait indefinitely
+- ❌ Cannot verify full test coverage
+
+**Root Cause:**
+MSW may not be properly intercepting all requests, causing tests to wait for network responses that never resolve.
 
 **Files Affected:**
-- `/frontend/src/pages/__tests__/Home.test.tsx`
-- `/frontend/src/pages/__tests__/TakeQuiz.test.tsx`
+- `/frontend/src/pages/__tests__/Home.test.tsx` - Partially working
+- `/frontend/src/pages/__tests__/TakeQuiz.test.tsx` - Hanging
+- `/frontend/src/pages/__tests__/AdminQuizCreate.test.tsx` - Hanging
+- `/frontend/src/mocks/*` - MSW configuration
+- `/frontend/src/test/setup.ts` - Test setup with MSW
 
-**Fix:**
-```typescript
-// In Home.test.tsx and TakeQuiz.test.tsx, change:
-vi.mocked(api.getQuizzes).mockResolvedValue(mockQuizzes);
-
-// To:
-vi.mocked(api.getAllQuizzes).mockResolvedValue(mockQuizzes);
-```
+**Next Steps:**
+1. Debug MSW request interception
+2. Add MSW logging to see what's being intercepted
+3. Verify MSW handlers match API routes
+4. Add timeout configuration to prevent indefinite hangs
+5. Check if components are making unexpected network calls
 
 **Test Plan:**
-1. Run `npm run test:frontend`
-2. Verify all 12 tests pass
-3. Check coverage report
+1. Run `npm run test:frontend` with verbose logging
+2. Verify all tests complete (no timeouts)
+3. Verify all 12+ tests pass
+4. Check coverage report
 
 **Notes:**
-- Tests were partially updated but not fully synchronized with API method names
-- Consider adding pre-commit hook to prevent test failures from being committed
+- Chicago/classicist approach now implemented (components use real API service)
+- MSW intercepts at network level (no module mocking breakage)
+- This is the correct architectural approach, just needs debugging
 
 ---
 
@@ -159,33 +179,43 @@ This is no longer a "bug" but an **intentional architectural decision** driven b
 
 ---
 
-### CRITICAL-4: Error Handling Inconsistency in Repository
-**Priority:** CRITICAL
+### CRITICAL-4: Error Handling Inconsistency in Repository ✅ RESOLVED
+**Priority:** CRITICAL → RESOLVED
 **Impact:** Error responses don't follow API contract
-**Effort:** 15 minutes
+**Effort:** 15 minutes → **Actual: 15 minutes**
+**Status:** ✅ **RESOLVED** on 2025-11-07
 
-**Description:**
-InMemoryQuizRepository throws plain `Error` instead of `AppError`, causing error middleware to fail.
+**Original Description:**
+InMemoryQuizRepository threw plain `Error` instead of `AppError`, causing error middleware to return incorrect status codes and error formats.
 
-**Files Affected:**
-- `/backend/src/repositories/InMemoryQuizRepository.ts:22`
+**Resolution Implemented:**
+Updated InMemoryQuizRepository to use AppError with proper status code (409 Conflict).
 
-**Current Code:**
+**Changes Made:**
+1. ✅ Added import for AppError from `middleware/errorHandler`
+2. ✅ Changed error throwing to use `AppError(409, 'Quiz already exists')`
+3. ✅ Updated test to expect new error message
+4. ✅ Verified all 96 backend tests pass
+
+**Fix Applied:**
 ```typescript
+// backend/src/repositories/InMemoryQuizRepository.ts
+import { AppError } from '../middleware/errorHandler';
+
+// Changed from:
 throw new Error(`Quiz with id ${quiz.id} already exists`);
+
+// Changed to:
+throw new AppError(409, 'Quiz already exists');
 ```
 
-**Fix:**
-```typescript
-import { AppError } from '../utils/errorHandler';
+**Test Results:**
+- ✅ All 96 backend tests passing
+- ✅ Error middleware now properly handles duplicate quiz errors
+- ✅ API returns correct 409 Conflict status with standardized error format
 
-throw new AppError('Quiz already exists', 409);
-```
-
-**Test Plan:**
-1. Try to create duplicate quiz
-2. Verify response is `{ success: false, error: 'Conflict', message: 'Quiz already exists' }`
-3. Add integration test for duplicate quiz scenario
+**Conclusion:**
+Error handling is now consistent throughout the repository layer. All errors use AppError which ensures proper status codes and error response formatting
 
 ---
 
@@ -1563,7 +1593,7 @@ Add detailed Railway deployment section:
 ## Summary Statistics
 
 ### Issues by Priority
-- **CRITICAL:** 2 remaining (2 resolved: shared package, API endpoint) - must fix before deployment
+- **CRITICAL:** 1 remaining (3 resolved: shared package, API endpoint, error handling) - must fix before deployment
 - **HIGH:** 6 issues (fix in next sprint)
 - **MEDIUM:** 7 issues (regular maintenance)
 - **LOW:** 8 issues (code quality & polish)
@@ -1572,10 +1602,10 @@ Add detailed Railway deployment section:
 - **DOCUMENTATION:** 3 issues (improve developer experience)
 
 ### Issues by Category
-- **Functionality Bugs:** 2 remaining (2 resolved: shared package duplication, API endpoint mismatch)
+- **Functionality Bugs:** 1 remaining (3 resolved: shared package duplication, API endpoint mismatch, error handling)
 - **Architecture:** 7 remaining (1 resolved: duplication strategy documented)
 - **Code Quality:** 12 (type safety, unused code, magic numbers)
-- **Testing:** 5 (coverage gaps, missing tests)
+- **Testing:** 5 (coverage gaps, MSW hanging issue)
 - **Security:** 4 (CSRF, CSP, auth)
 - **Performance:** 3 (bundle size, pagination, caching)
 - **Documentation:** 3 (API docs, contributing guide, deployment)
@@ -1583,7 +1613,7 @@ Add detailed Railway deployment section:
 - **Dependencies:** 2 remaining (1 resolved: shared package)
 
 ### Estimated Total Effort
-- **Phase 1 (Critical):** ~0.75 hours remaining (was ~3 hours, saved 2.25 hours by resolving CRITICAL-1 and CRITICAL-3)
+- **Phase 1 (Critical):** ~1-2 hours remaining (was ~3 hours, now only CRITICAL-2 MSW debugging remains)
 - **Phase 2 (High):** ~18 hours
 - **Phase 3 (Medium):** ~9 hours
 - **Phase 4 (Low):** ~10 hours
@@ -1591,14 +1621,18 @@ Add detailed Railway deployment section:
 - **Phase 6 (Performance):** ~7 hours
 - **Phase 7 (Documentation):** ~3 hours
 
-**Total Remaining:** ~52.75 hours (was ~55 hours, excluding full auth system)
-**Time Saved:** 2.25 hours by resolving CRITICAL-1 and CRITICAL-3 early
+**Total Remaining:** ~50-51 hours (was ~55 hours, excluding full auth system)
+**Time Saved/Completed:**
+- ✅ CRITICAL-1: Saved 5 minutes (completed)
+- ✅ CRITICAL-3: Saved 30 minutes (completed)
+- ✅ CRITICAL-4: Saved 15 minutes (completed)
+- Total saved: ~50 minutes by resolving 3 critical issues early
 
 ### Quick Wins (< 30 minutes each)
 1. ✅ ~~Resolve shared package duplication (CRITICAL-3)~~ - **COMPLETED**
 2. ✅ ~~Fix API endpoint mismatch (CRITICAL-1)~~ - **COMPLETED**
-3. Fix test mocking (CRITICAL-2)
-4. Fix error type in repository (CRITICAL-4)
+3. ✅ ~~Fix error type in repository (CRITICAL-4)~~ - **COMPLETED**
+4. Debug MSW hanging issue (CRITICAL-2) - Updated to 1-2 hours
 5. Use environment variable for API URL (HIGH-3)
 6. Extract magic numbers to constants (MEDIUM-6)
 7. Add health check to docs (LOW-6)
@@ -1609,8 +1643,8 @@ Add detailed Railway deployment section:
 **Sprint 1 (Critical + Quick Wins):**
 - ✅ ~~CRITICAL-3 (shared package)~~ - **COMPLETED**
 - ✅ ~~CRITICAL-1 (API endpoint mismatch)~~ - **COMPLETED**
-- CRITICAL-2 (test failures)
-- CRITICAL-4 (error handling)
+- ✅ ~~CRITICAL-4 (error handling)~~ - **COMPLETED**
+- ⚠️ CRITICAL-2 (MSW test hanging) - **IN PROGRESS**
 - HIGH-3 (environment config)
 - MEDIUM-6 (magic numbers)
 - DOCUMENTATION-1 (API docs)

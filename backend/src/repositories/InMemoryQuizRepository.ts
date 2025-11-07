@@ -1,6 +1,7 @@
 import { Quiz } from '../shared';
 import { IQuizRepository } from './IQuizRepository';
 import { logger } from '../utils/logger';
+import { AppError } from '../middleware/errorHandler';
 
 export class InMemoryQuizRepository implements IQuizRepository {
   private quizzes: Map<string, Quiz> = new Map();
@@ -19,7 +20,7 @@ export class InMemoryQuizRepository implements IQuizRepository {
     logger.info(`QuizRepository: Creating quiz with id: ${quiz.id}`);
 
     if (this.quizzes.has(quiz.id)) {
-      throw new Error(`Quiz with id ${quiz.id} already exists`);
+      throw new AppError(409, 'Quiz already exists');
     }
 
     this.quizzes.set(quiz.id, quiz);

@@ -45,7 +45,7 @@ describe('InMemoryQuizRepository', () => {
       await repository.create(mockQuiz);
 
       await expect(repository.create(mockQuiz)).rejects.toThrow(
-        'Quiz with id quiz-1 already exists'
+        'Quiz already exists'
       );
     });
   });
