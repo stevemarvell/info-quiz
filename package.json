@@ -16,12 +16,16 @@
     "test:shared": "npm run test --workspace=shared",
     "test:backend": "npm run test --workspace=backend",
     "test:frontend": "npm run test --workspace=frontend",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run start --workspace=frontend",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "concurrently": "^8.2.0"
   }
 }
