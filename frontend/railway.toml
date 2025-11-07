@@ -1,11 +1,11 @@
 [build]
 builder = "RAILPACK"
-buildCommand = "cd .. && npm install --legacy-peer-deps && npm run build:shared && npm run build:frontend"
+buildCommand = "npm install --legacy-peer-deps && npm run build:shared && npm run build:frontend"
 watchPaths = ["frontend/**", "shared/**"]
 
 [deploy]
 numReplicas = 1
-startCommand = "cd .. && npm start --workspace=frontend"
+startCommand = "npm start --workspace=frontend"
 serverless = true
 restartPolicyType = "NEVER"
 restartPolicyMaxRetries = 0
