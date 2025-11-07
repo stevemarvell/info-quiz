@@ -1,5 +1,4 @@
 import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { v4 as uuidv4 } from 'uuid';
 import {
   IonContent,
@@ -24,7 +23,7 @@ import {
 } from '@ionic/react';
 import { add, trash } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { Quiz, QuizSchema } from '@quiz-app/shared';
+import { Quiz } from '@quiz-app/shared';
 import { api } from '../services/api';
 import { FormField } from '../components/FormField';
 import { useToast } from '../hooks/useToast';
@@ -41,7 +40,6 @@ const AdminQuizCreate: React.FC = () => {
     setValue,
     formState: { errors, isSubmitting }
   } = useForm<Quiz>({
-    resolver: zodResolver(QuizSchema),
     defaultValues: {
       id: `quiz-${uuidv4()}`,
       title: '',
@@ -249,7 +247,7 @@ const AdminQuizCreate: React.FC = () => {
                           )}
 
                           <h4 style={{ marginTop: '1rem' }}>Metric Scores (0-5)</h4>
-                          {watchedMetrics.map((metric, mIndex) => {
+                          {watchedMetrics.map((metric, _mIndex) => {
                             const score =
                               watchedQuestions[qIndex]?.answers?.[aIndex]?.metricScores?.find(
                                 ms => ms.metricId === metric.id

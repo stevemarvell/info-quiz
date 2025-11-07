@@ -10,18 +10,16 @@ import {
   IonCardTitle,
   IonCardContent,
   IonButton,
-  IonButtons,
   IonProgressBar,
   IonLabel,
   IonItem
 } from '@ionic/react';
-import { useHistory, useLocation, useParams } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { QuizResult } from '../types';
 
 const QuizResults: React.FC = () => {
   const history = useHistory();
   const location = useLocation<{ result?: QuizResult }>();
-  const { quizId } = useParams<{ quizId: string }>();
   const [result, setResult] = useState<QuizResult | null>(null);
 
   useEffect(() => {

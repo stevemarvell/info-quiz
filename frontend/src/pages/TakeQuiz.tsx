@@ -37,6 +37,13 @@ const TakeQuiz: React.FC = () => {
     let isMounted = true;
 
     const loadQuiz = async () => {
+      if (!id) {
+        if (isMounted) {
+          showError('Quiz ID is missing');
+          setLoading(false);
+        }
+        return;
+      }
       try {
         const data = await api.getQuiz(id);
         if (isMounted) {

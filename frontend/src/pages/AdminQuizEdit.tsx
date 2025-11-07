@@ -25,9 +25,8 @@ import {
 import { add, trash } from 'ionicons/icons';
 import { useHistory, useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { api } from '../services/api';
-import { Quiz, QuizSchema, Metric, Question, Answer } from '../types';
+import { Quiz, Answer } from '../types';
 import { FormField } from '../components/FormField';
 import { useToast } from '../hooks/useToast';
 
@@ -46,7 +45,6 @@ const AdminQuizEdit: React.FC = () => {
     reset,
     formState: { errors, isSubmitting }
   } = useForm<Quiz>({
-    resolver: zodResolver(QuizSchema),
     defaultValues: {
       id: '',
       title: '',
@@ -74,6 +72,11 @@ const AdminQuizEdit: React.FC = () => {
   }, [id]);
 
   const loadQuiz = async () => {
+    if (!id) {
+      showError('Quiz ID is missing');
+      setLoading(false);
+      return;
+    }
     try {
       const quiz = await api.getQuiz(id);
       reset(quiz);
@@ -85,6 +88,10 @@ const AdminQuizEdit: React.FC = () => {
   };
 
   const onSubmit = async (data: Quiz) => {
+    if (!id) {
+      showError('Quiz ID is missing');
+      return;
+    }
     try {
       await api.updateQuiz(id, data);
       showSuccess('Quiz updated successfully!');
@@ -308,7 +315,7 @@ const AdminQuizEdit: React.FC = () => {
                             )}
 
                             <h4 style={{ marginTop: '1rem' }}>Metric Scores (0-5)</h4>
-                            {watchedMetrics.map((metric, mIndex) => {
+                            {watchedMetrics.map((metric, _mIndex) => {
                               const metricScore = answer.metricScores?.find(
                                 ms => ms.metricId === metric.id
                               );
