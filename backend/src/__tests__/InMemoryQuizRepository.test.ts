@@ -1,13 +1,13 @@
-import { InMemoryQuizRepository } from '../repositories/InMemoryQuizRepository';
-import { Quiz } from '../shared';
+import { InMemoryAssessmentRepository } from '../repositories/InMemoryAssessmentRepository';
+import { Assessment } from '../shared';
 
-describe('InMemoryQuizRepository', () => {
-  let repository: InMemoryQuizRepository;
+describe('InMemoryAssessmentRepository', () => {
+  let repository: InMemoryAssessmentRepository;
 
-  const mockQuiz: Quiz = {
-    id: 'quiz-1',
-    title: 'Test Quiz',
-    description: 'A test quiz',
+  const mockAssessment: Assessment = {
+    id: 'assessment-1',
+    title: 'Test Assessment',
+    description: 'A test assessment',
     metrics: [
       { id: 'metric-1', name: 'Metric 1', description: 'First metric' }
     ],
@@ -15,15 +15,15 @@ describe('InMemoryQuizRepository', () => {
       {
         id: 'q1',
         text: 'Question 1?',
-        answers: [
+        options: [
           {
             id: 'a1',
-            text: 'Answer 1',
+            text: 'Option 1',
             metricScores: [{ metricId: 'metric-1', score: 5 }]
           },
           {
             id: 'a2',
-            text: 'Answer 2',
+            text: 'Option 2',
             metricScores: [{ metricId: 'metric-1', score: 3 }]
           }
         ]
@@ -32,101 +32,101 @@ describe('InMemoryQuizRepository', () => {
   };
 
   beforeEach(() => {
-    repository = new InMemoryQuizRepository();
+    repository = new InMemoryAssessmentRepository();
   });
 
   describe('create', () => {
-    it('should create a new quiz', async () => {
-      const result = await repository.create(mockQuiz);
-      expect(result).toEqual(mockQuiz);
+    it('should create a new assessment', async () => {
+      const result = await repository.create(mockAssessment);
+      expect(result).toEqual(mockAssessment);
     });
 
-    it('should throw error when creating quiz with duplicate id', async () => {
-      await repository.create(mockQuiz);
+    it('should throw error when creating assessment with duplicate id', async () => {
+      await repository.create(mockAssessment);
 
-      await expect(repository.create(mockQuiz)).rejects.toThrow(
-        'Quiz already exists'
+      await expect(repository.create(mockAssessment)).rejects.toThrow(
+        'Assessment already exists'
       );
     });
   });
 
   describe('findAll', () => {
-    it('should return all quizzes', async () => {
-      await repository.create(mockQuiz);
-      const quizzes = await repository.findAll();
-      expect(quizzes).toHaveLength(1);
-      expect(quizzes[0]).toEqual(mockQuiz);
+    it('should return all assessmentzes', async () => {
+      await repository.create(mockAssessment);
+      const assessmentzes = await repository.findAll();
+      expect(assessmentzes).toHaveLength(1);
+      expect(assessmentzes[0]).toEqual(mockAssessment);
     });
 
-    it('should return empty array when no quizzes exist', async () => {
-      const quizzes = await repository.findAll();
-      expect(quizzes).toEqual([]);
+    it('should return empty array when no assessmentzes exist', async () => {
+      const assessmentzes = await repository.findAll();
+      expect(assessmentzes).toEqual([]);
     });
   });
 
   describe('findById', () => {
-    it('should find quiz by id', async () => {
-      await repository.create(mockQuiz);
-      const result = await repository.findById('quiz-1');
-      expect(result).toEqual(mockQuiz);
+    it('should find assessment by id', async () => {
+      await repository.create(mockAssessment);
+      const result = await repository.findById('assessment-1');
+      expect(result).toEqual(mockAssessment);
     });
 
-    it('should return null when quiz not found', async () => {
+    it('should return null when assessment not found', async () => {
       const result = await repository.findById('nonexistent');
       expect(result).toBeNull();
     });
   });
 
   describe('update', () => {
-    it('should update existing quiz', async () => {
-      await repository.create(mockQuiz);
-      const updated = { ...mockQuiz, title: 'Updated Title' };
-      const result = await repository.update('quiz-1', updated);
+    it('should update existing assessment', async () => {
+      await repository.create(mockAssessment);
+      const updated = { ...mockAssessment, title: 'Updated Title' };
+      const result = await repository.update('assessment-1', updated);
       expect(result?.title).toBe('Updated Title');
     });
 
-    it('should return null when updating nonexistent quiz', async () => {
-      const result = await repository.update('nonexistent', mockQuiz);
+    it('should return null when updating nonexistent assessment', async () => {
+      const result = await repository.update('nonexistent', mockAssessment);
       expect(result).toBeNull();
     });
   });
 
   describe('delete', () => {
-    it('should delete existing quiz', async () => {
-      await repository.create(mockQuiz);
-      const result = await repository.delete('quiz-1');
+    it('should delete existing assessment', async () => {
+      await repository.create(mockAssessment);
+      const result = await repository.delete('assessment-1');
       expect(result).toBe(true);
 
-      const found = await repository.findById('quiz-1');
+      const found = await repository.findById('assessment-1');
       expect(found).toBeNull();
     });
 
-    it('should return false when deleting nonexistent quiz', async () => {
+    it('should return false when deleting nonexistent assessment', async () => {
       const result = await repository.delete('nonexistent');
       expect(result).toBe(false);
     });
   });
 
   describe('exists', () => {
-    it('should return true when quiz exists', async () => {
-      await repository.create(mockQuiz);
-      const result = await repository.exists('quiz-1');
+    it('should return true when assessment exists', async () => {
+      await repository.create(mockAssessment);
+      const result = await repository.exists('assessment-1');
       expect(result).toBe(true);
     });
 
-    it('should return false when quiz does not exist', async () => {
+    it('should return false when assessment does not exist', async () => {
       const result = await repository.exists('nonexistent');
       expect(result).toBe(false);
     });
   });
 
   describe('clear', () => {
-    it('should clear all quizzes', async () => {
-      await repository.create(mockQuiz);
+    it('should clear all assessmentzes', async () => {
+      await repository.create(mockAssessment);
       repository.clear();
 
-      const quizzes = await repository.findAll();
-      expect(quizzes).toHaveLength(0);
+      const assessmentzes = await repository.findAll();
+      expect(assessmentzes).toHaveLength(0);
     });
   });
 
@@ -134,10 +134,10 @@ describe('InMemoryQuizRepository', () => {
     it('should return correct size', async () => {
       expect(repository.size()).toBe(0);
 
-      await repository.create(mockQuiz);
+      await repository.create(mockAssessment);
       expect(repository.size()).toBe(1);
 
-      await repository.create({ ...mockQuiz, id: 'quiz-2' });
+      await repository.create({ ...mockAssessment, id: 'assessment-2' });
       expect(repository.size()).toBe(2);
     });
   });

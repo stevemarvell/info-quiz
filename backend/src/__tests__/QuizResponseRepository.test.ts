@@ -1,19 +1,19 @@
-import { QuizResponse, QuizResult } from '../shared';
-import { InMemoryQuizResponseRepository } from '../repositories/InMemoryQuizResponseRepository';
+import { AssessmentSelection, AssessmentResult } from '../shared';
+import { InMemoryAssessmentSelectionRepository } from '../repositories/InMemoryAssessmentSelectionRepository';
 
-describe('InMemoryQuizResponseRepository', () => {
-  let repository: InMemoryQuizResponseRepository;
+describe('InMemoryAssessmentSelectionRepository', () => {
+  let repository: InMemoryAssessmentSelectionRepository;
 
-  const mockResponse: QuizResponse = {
-    quizId: 'quiz-1',
-    answers: [
-      { questionId: 'q1', answerId: 'a1' },
-      { questionId: 'q2', answerId: 'a2' }
+  const mockSelection: AssessmentSelection = {
+    assessmentId: 'assessment-1',
+    selectedOptions: [
+      { questionId: 'q1', optionId: 'a1' },
+      { questionId: 'q2', optionId: 'a2' }
     ]
   };
 
-  const mockResult: QuizResult = {
-    quizId: 'quiz-1',
+  const mockResult: AssessmentResult = {
+    assessmentId: 'assessment-1',
     metricScores: [
       {
         metricId: 'm1',
@@ -26,70 +26,70 @@ describe('InMemoryQuizResponseRepository', () => {
   };
 
   beforeEach(() => {
-    repository = new InMemoryQuizResponseRepository();
+    repository = new InMemoryAssessmentSelectionRepository();
   });
 
   describe('save', () => {
-    it('should save a response and result', async () => {
-      await repository.save(mockResponse, mockResult);
+    it('should save a selection and result', async () => {
+      await repository.save(mockSelection, mockResult);
 
       expect(repository.size()).toBe(1);
     });
 
-    it('should increment response ID counter', async () => {
-      await repository.save(mockResponse, mockResult);
-      await repository.save(mockResponse, mockResult);
+    it('should increment selection ID counter', async () => {
+      await repository.save(mockSelection, mockResult);
+      await repository.save(mockSelection, mockResult);
 
       expect(repository.size()).toBe(2);
     });
   });
 
-  describe('findByQuizId', () => {
-    it('should find responses by quiz ID', async () => {
-      await repository.save(mockResponse, mockResult);
+  describe('findByAssessmentId', () => {
+    it('should find selections by assessment ID', async () => {
+      await repository.save(mockSelection, mockResult);
       await repository.save(
-        { ...mockResponse, quizId: 'quiz-2' },
+        { ...mockSelection, assessmentId: 'assessment-2' },
         mockResult
       );
 
-      const results = await repository.findByQuizId('quiz-1');
+      const results = await repository.findByAssessmentId('assessment-1');
 
       expect(results).toHaveLength(1);
-      expect(results[0].response.quizId).toBe('quiz-1');
+      expect(results[0].selection.assessmentId).toBe('assessment-1');
       expect(results[0].result).toEqual(mockResult);
     });
 
-    it('should return empty array for non-existent quiz ID', async () => {
-      await repository.save(mockResponse, mockResult);
+    it('should return empty array for non-existent assessment ID', async () => {
+      await repository.save(mockSelection, mockResult);
 
-      const results = await repository.findByQuizId('non-existent');
+      const results = await repository.findByAssessmentId('non-existent');
 
       expect(results).toHaveLength(0);
     });
 
-    it('should return multiple responses for the same quiz', async () => {
-      await repository.save(mockResponse, mockResult);
-      await repository.save(mockResponse, mockResult);
+    it('should return multiple selections for the same assessment', async () => {
+      await repository.save(mockSelection, mockResult);
+      await repository.save(mockSelection, mockResult);
 
-      const results = await repository.findByQuizId('quiz-1');
+      const results = await repository.findByAssessmentId('assessment-1');
 
       expect(results).toHaveLength(2);
     });
   });
 
   describe('findById', () => {
-    it('should find response by ID', async () => {
-      await repository.save(mockResponse, mockResult);
+    it('should find selection by ID', async () => {
+      await repository.save(mockSelection, mockResult);
 
-      const result = await repository.findById('response-1');
+      const result = await repository.findById('selection-1');
 
       expect(result).not.toBeNull();
-      expect(result?.response).toEqual(mockResponse);
+      expect(result?.selection).toEqual(mockSelection);
       expect(result?.result).toEqual(mockResult);
     });
 
     it('should return null for non-existent ID', async () => {
-      await repository.save(mockResponse, mockResult);
+      await repository.save(mockSelection, mockResult);
 
       const result = await repository.findById('non-existent');
 
@@ -98,9 +98,9 @@ describe('InMemoryQuizResponseRepository', () => {
   });
 
   describe('clear', () => {
-    it('should clear all responses', () => {
-      repository.save(mockResponse, mockResult);
-      repository.save(mockResponse, mockResult);
+    it('should clear all selections', () => {
+      repository.save(mockSelection, mockResult);
+      repository.save(mockSelection, mockResult);
 
       expect(repository.size()).toBe(2);
 
@@ -110,11 +110,11 @@ describe('InMemoryQuizResponseRepository', () => {
     });
 
     it('should reset ID counter', async () => {
-      await repository.save(mockResponse, mockResult);
+      await repository.save(mockSelection, mockResult);
       repository.clear();
-      await repository.save(mockResponse, mockResult);
+      await repository.save(mockSelection, mockResult);
 
-      const result = await repository.findById('response-1');
+      const result = await repository.findById('selection-1');
 
       expect(result).not.toBeNull();
     });
@@ -126,10 +126,10 @@ describe('InMemoryQuizResponseRepository', () => {
     });
 
     it('should return correct size', async () => {
-      await repository.save(mockResponse, mockResult);
+      await repository.save(mockSelection, mockResult);
       expect(repository.size()).toBe(1);
 
-      await repository.save(mockResponse, mockResult);
+      await repository.save(mockSelection, mockResult);
       expect(repository.size()).toBe(2);
     });
   });

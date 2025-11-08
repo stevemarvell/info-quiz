@@ -7,16 +7,16 @@ import { api } from '../../services/api';
 // Use manual mock from __mocks__ directory
 vi.mock('../../services/api');
 
-const mockQuizzes = [
+const mockAssessments = [
   {
-    id: 'quiz-1',
+    id: 'assessment-1',
     title: 'Wellbeing Assessment',
-    description: 'A comprehensive wellbeing quiz',
+    description: 'A comprehensive wellbeing assessment',
     metrics: [{ id: 'm1', name: 'Physical Health', description: '' }],
     questions: []
   },
   {
-    id: 'quiz-2',
+    id: 'assessment-2',
     title: 'Mental Health Check',
     description: 'Quick mental health assessment',
     metrics: [{ id: 'm2', name: 'Mental Health', description: '' }],
@@ -30,7 +30,7 @@ describe('Home Component', () => {
   });
 
   it('should render home page title', () => {
-    vi.mocked(api.getAllQuizzes).mockResolvedValue(mockQuizzes);
+    vi.mocked(api.getAllAssessments).mockResolvedValue(mockAssessments);
 
     render(
       <BrowserRouter>
@@ -38,11 +38,11 @@ describe('Home Component', () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/quiz/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Available Assessments/i)[0]).toBeInTheDocument();
   });
 
-  it('should display quizzes after loading', async () => {
-    vi.mocked(api.getAllQuizzes).mockResolvedValue(mockQuizzes);
+  it('should display assessments after loading', async () => {
+    vi.mocked(api.getAllAssessments).mockResolvedValue(mockAssessments);
 
     render(
       <BrowserRouter>
@@ -55,8 +55,8 @@ describe('Home Component', () => {
     });
   });
 
-  it('should display empty state when no quizzes', async () => {
-    vi.mocked(api.getAllQuizzes).mockResolvedValue([]);
+  it('should display empty state when no assessments', async () => {
+    vi.mocked(api.getAllAssessments).mockResolvedValue([]);
 
     render(
       <BrowserRouter>
@@ -65,15 +65,12 @@ describe('Home Component', () => {
     );
 
     await waitFor(() => {
-      const content = screen.getByText((content, element) => {
-        return element?.textContent?.toLowerCase().includes('no quizzes') || false;
-      });
-      expect(content).toBeInTheDocument();
+      expect(screen.getByText('No assessments available')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
   it('should handle API errors gracefully', async () => {
-    vi.mocked(api.getAllQuizzes).mockRejectedValue(new Error('API Error'));
+    vi.mocked(api.getAllAssessments).mockRejectedValue(new Error('API Error'));
 
     render(
       <BrowserRouter>
@@ -83,7 +80,7 @@ describe('Home Component', () => {
 
     // Component should not crash
     await waitFor(() => {
-      expect(screen.getByText(/quiz/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Available Assessments/i)[0]).toBeInTheDocument();
     });
   });
 });

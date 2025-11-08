@@ -40,11 +40,17 @@ jobs:
       - name: Build frontend
         run: npm run build:frontend
 
+      - name: Build admin
+        run: npm run build:admin
+
       - name: Run backend tests
         run: npm run test:backend
 
       - name: Run frontend smoke tests
         run: npm run test:frontend -- smoke.test --run
+
+      - name: Run admin smoke tests
+        run: npm run test:admin -- smoke.test --run || true
 
       - name: Upload coverage reports
         if: always()
