@@ -1,25 +1,25 @@
-import { QuizService } from '../services/QuizService';
-import { InMemoryQuizRepository } from '../repositories/InMemoryQuizRepository';
-import { InMemoryQuizResponseRepository } from '../repositories/InMemoryQuizResponseRepository';
-import { Quiz, QuizResponse } from '../shared';
+import { AssessmentService } from '../services/AssessmentService';
+import { InMemoryAssessmentRepository } from '../repositories/InMemoryAssessmentRepository';
+import { InMemoryAssessmentSelectionRepository } from '../repositories/InMemoryAssessmentSelectionRepository';
+import { Assessment, AssessmentSelection } from '../shared';
 
-describe('QuizService', () => {
-  let service: QuizService;
-  let quizRepository: InMemoryQuizRepository;
-  let responseRepository: InMemoryQuizResponseRepository;
+describe('AssessmentService', () => {
+  let service: AssessmentService;
+  let assessmentRepository: InMemoryAssessmentRepository;
+  let selectionRepository: InMemoryAssessmentSelectionRepository;
 
   beforeEach(() => {
-    quizRepository = new InMemoryQuizRepository();
-    responseRepository = new InMemoryQuizResponseRepository();
-    service = new QuizService(quizRepository, responseRepository);
+    assessmentRepository = new InMemoryAssessmentRepository();
+    selectionRepository = new InMemoryAssessmentSelectionRepository();
+    service = new AssessmentService(assessmentRepository, selectionRepository);
   });
 
   describe('calculateResults', () => {
     it('should calculate scores correctly with varying answer scores', () => {
-      // Quiz where answers have different scores for the same metric
-      const quiz: Quiz = {
-        id: 'test-quiz',
-        title: 'Test Quiz',
+      // Assessment where selectedOptions have different scores for the same metric
+      const assessment: Assessment = {
+        id: 'test-assessment',
+        title: 'Test Assessment',
         description: 'Test',
         metrics: [
           { id: 'm1', name: 'Metric 1', description: 'Test metric 1' },
@@ -29,10 +29,10 @@ describe('QuizService', () => {
           {
             id: 'q1',
             text: 'Question 1',
-            answers: [
+            options: [
               {
                 id: 'q1a1',
-                text: 'Answer 1',
+                text: 'Option 1',
                 metricScores: [
                   { metricId: 'm1', score: 5 }, // Max for m1 in q1
                   { metricId: 'm2', score: 2 }
@@ -40,7 +40,7 @@ describe('QuizService', () => {
               },
               {
                 id: 'q1a2',
-                text: 'Answer 2',
+                text: 'Option 2',
                 metricScores: [
                   { metricId: 'm1', score: 3 },
                   { metricId: 'm2', score: 4 } // Max for m2 in q1
@@ -51,10 +51,10 @@ describe('QuizService', () => {
           {
             id: 'q2',
             text: 'Question 2',
-            answers: [
+            options: [
               {
                 id: 'q2a1',
-                text: 'Answer 1',
+                text: 'Option 1',
                 metricScores: [
                   { metricId: 'm1', score: 2 },
                   { metricId: 'm2', score: 5 } // Max for m2 in q2
@@ -62,7 +62,7 @@ describe('QuizService', () => {
               },
               {
                 id: 'q2a2',
-                text: 'Answer 2',
+                text: 'Option 2',
                 metricScores: [
                   { metricId: 'm1', score: 4 }, // Max for m1 in q2
                   { metricId: 'm2', score: 1 }
@@ -73,15 +73,15 @@ describe('QuizService', () => {
         ]
       };
 
-      const response: QuizResponse = {
-        quizId: 'test-quiz',
-        answers: [
-          { questionId: 'q1', answerId: 'q1a1' }, // m1: 5, m2: 2
-          { questionId: 'q2', answerId: 'q2a2' }  // m1: 4, m2: 1
+      const selection: AssessmentSelection = {
+        assessmentId: 'test-assessment',
+        selectedOptions: [
+          { questionId: 'q1', optionId: 'q1a1' }, // m1: 5, m2: 2
+          { questionId: 'q2', optionId: 'q2a2' }  // m1: 4, m2: 1
         ]
       };
 
-      const result = service.calculateResults(quiz, response);
+      const result = service.calculateResults(assessment, selection);
 
       // Max scores: m1 = 5+4 = 9, m2 = 4+5 = 9
       // User scores: m1 = 5+4 = 9, m2 = 2+1 = 3
@@ -101,24 +101,24 @@ describe('QuizService', () => {
     });
 
     it('should handle all zero scores', () => {
-      const quiz: Quiz = {
-        id: 'test-quiz',
-        title: 'Test Quiz',
+      const assessment: Assessment = {
+        id: 'test-assessment',
+        title: 'Test Assessment',
         description: 'Test',
         metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
         questions: [
           {
             id: 'q1',
             text: 'Question 1',
-            answers: [
+            options: [
               {
                 id: 'q1a1',
-                text: 'Answer 1',
+                text: 'Option 1',
                 metricScores: [{ metricId: 'm1', score: 0 }]
               },
               {
                 id: 'q1a2',
-                text: 'Answer 2',
+                text: 'Option 2',
                 metricScores: [{ metricId: 'm1', score: 0 }]
               }
             ]
@@ -126,12 +126,12 @@ describe('QuizService', () => {
         ]
       };
 
-      const response: QuizResponse = {
-        quizId: 'test-quiz',
-        answers: [{ questionId: 'q1', answerId: 'q1a1' }]
+      const selection: AssessmentSelection = {
+        assessmentId: 'test-assessment',
+        selectedOptions: [{ questionId: 'q1', optionId: 'q1a1' }]
       };
 
-      const result = service.calculateResults(quiz, response);
+      const result = service.calculateResults(assessment, selection);
 
       expect(result.metricScores[0].totalScore).toBe(0);
       expect(result.metricScores[0].maxScore).toBe(0);
@@ -139,16 +139,16 @@ describe('QuizService', () => {
     });
 
     it('should handle perfect score', () => {
-      const quiz: Quiz = {
-        id: 'test-quiz',
-        title: 'Test Quiz',
+      const assessment: Assessment = {
+        id: 'test-assessment',
+        title: 'Test Assessment',
         description: 'Test',
         metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
         questions: [
           {
             id: 'q1',
             text: 'Question 1',
-            answers: [
+            options: [
               {
                 id: 'q1a1',
                 text: 'Perfect answer',
@@ -164,7 +164,7 @@ describe('QuizService', () => {
           {
             id: 'q2',
             text: 'Question 2',
-            answers: [
+            options: [
               {
                 id: 'q2a1',
                 text: 'Perfect answer',
@@ -180,15 +180,15 @@ describe('QuizService', () => {
         ]
       };
 
-      const response: QuizResponse = {
-        quizId: 'test-quiz',
-        answers: [
-          { questionId: 'q1', answerId: 'q1a1' },
-          { questionId: 'q2', answerId: 'q2a1' }
+      const selection: AssessmentSelection = {
+        assessmentId: 'test-assessment',
+        selectedOptions: [
+          { questionId: 'q1', optionId: 'q1a1' },
+          { questionId: 'q2', optionId: 'q2a1' }
         ]
       };
 
-      const result = service.calculateResults(quiz, response);
+      const result = service.calculateResults(assessment, selection);
 
       expect(result.metricScores[0].totalScore).toBe(10);
       expect(result.metricScores[0].maxScore).toBe(10);
@@ -196,24 +196,24 @@ describe('QuizService', () => {
     });
 
     it('should round percentages to 1 decimal place', () => {
-      const quiz: Quiz = {
-        id: 'test-quiz',
-        title: 'Test Quiz',
+      const assessment: Assessment = {
+        id: 'test-assessment',
+        title: 'Test Assessment',
         description: 'Test',
         metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
         questions: [
           {
             id: 'q1',
             text: 'Question 1',
-            answers: [
+            options: [
               {
                 id: 'q1a1',
-                text: 'Answer 1',
+                text: 'Option 1',
                 metricScores: [{ metricId: 'm1', score: 1 }]
               },
               {
                 id: 'q1a2',
-                text: 'Answer 2',
+                text: 'Option 2',
                 metricScores: [{ metricId: 'm1', score: 3 }]
               }
             ]
@@ -221,21 +221,21 @@ describe('QuizService', () => {
         ]
       };
 
-      const response: QuizResponse = {
-        quizId: 'test-quiz',
-        answers: [{ questionId: 'q1', answerId: 'q1a1' }] // 1 out of 3
+      const selection: AssessmentSelection = {
+        assessmentId: 'test-assessment',
+        selectedOptions: [{ questionId: 'q1', optionId: 'q1a1' }] // 1 out of 3
       };
 
-      const result = service.calculateResults(quiz, response);
+      const result = service.calculateResults(assessment, selection);
 
       // 1/3 * 100 = 33.333...
       expect(result.metricScores[0].percentage).toBe(33.3);
     });
 
     it('should handle multiple metrics independently', () => {
-      const quiz: Quiz = {
-        id: 'test-quiz',
-        title: 'Test Quiz',
+      const assessment: Assessment = {
+        id: 'test-assessment',
+        title: 'Test Assessment',
         description: 'Test',
         metrics: [
           { id: 'm1', name: 'Metric 1', description: 'Test' },
@@ -246,10 +246,10 @@ describe('QuizService', () => {
           {
             id: 'q1',
             text: 'Question 1',
-            answers: [
+            options: [
               {
                 id: 'q1a1',
-                text: 'Answer 1',
+                text: 'Option 1',
                 metricScores: [
                   { metricId: 'm1', score: 5 },
                   { metricId: 'm2', score: 2 },
@@ -258,7 +258,7 @@ describe('QuizService', () => {
               },
               {
                 id: 'q1a2',
-                text: 'Answer 2',
+                text: 'Option 2',
                 metricScores: [
                   { metricId: 'm1', score: 1 },
                   { metricId: 'm2', score: 4 },
@@ -270,12 +270,12 @@ describe('QuizService', () => {
         ]
       };
 
-      const response: QuizResponse = {
-        quizId: 'test-quiz',
-        answers: [{ questionId: 'q1', answerId: 'q1a1' }]
+      const selection: AssessmentSelection = {
+        assessmentId: 'test-assessment',
+        selectedOptions: [{ questionId: 'q1', optionId: 'q1a1' }]
       };
 
-      const result = service.calculateResults(quiz, response);
+      const result = service.calculateResults(assessment, selection);
 
       // m1: 5/5 = 100%, m2: 2/4 = 50%, m3: 0/5 = 0%
       const m1 = result.metricScores.find((ms: any) => ms.metricId === 'm1');
@@ -296,49 +296,49 @@ describe('QuizService', () => {
     });
 
     it('should calculate correct max when different questions have different max scores', () => {
-      const quiz: Quiz = {
-        id: 'test-quiz',
-        title: 'Test Quiz',
+      const assessment: Assessment = {
+        id: 'test-assessment',
+        title: 'Test Assessment',
         description: 'Test',
         metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
         questions: [
           {
             id: 'q1',
             text: 'Question 1',
-            answers: [
-              { id: 'q1a1', text: 'Answer 1', metricScores: [{ metricId: 'm1', score: 3 }] }, // Max for q1
-              { id: 'q1a2', text: 'Answer 2', metricScores: [{ metricId: 'm1', score: 1 }] }
+            options: [
+              { id: 'q1a1', text: 'Option 1', metricScores: [{ metricId: 'm1', score: 3 }] }, // Max for q1
+              { id: 'q1a2', text: 'Option 2', metricScores: [{ metricId: 'm1', score: 1 }] }
             ]
           },
           {
             id: 'q2',
             text: 'Question 2',
-            answers: [
-              { id: 'q2a1', text: 'Answer 1', metricScores: [{ metricId: 'm1', score: 5 }] }, // Max for q2
-              { id: 'q2a2', text: 'Answer 2', metricScores: [{ metricId: 'm1', score: 2 }] }
+            options: [
+              { id: 'q2a1', text: 'Option 1', metricScores: [{ metricId: 'm1', score: 5 }] }, // Max for q2
+              { id: 'q2a2', text: 'Option 2', metricScores: [{ metricId: 'm1', score: 2 }] }
             ]
           },
           {
             id: 'q3',
             text: 'Question 3',
-            answers: [
-              { id: 'q3a1', text: 'Answer 1', metricScores: [{ metricId: 'm1', score: 4 }] }, // Max for q3
-              { id: 'q3a2', text: 'Answer 2', metricScores: [{ metricId: 'm1', score: 2 }] }
+            options: [
+              { id: 'q3a1', text: 'Option 1', metricScores: [{ metricId: 'm1', score: 4 }] }, // Max for q3
+              { id: 'q3a2', text: 'Option 2', metricScores: [{ metricId: 'm1', score: 2 }] }
             ]
           }
         ]
       };
 
-      const response: QuizResponse = {
-        quizId: 'test-quiz',
-        answers: [
-          { questionId: 'q1', answerId: 'q1a2' }, // 1
-          { questionId: 'q2', answerId: 'q2a2' }, // 2
-          { questionId: 'q3', answerId: 'q3a2' }  // 2
+      const selection: AssessmentSelection = {
+        assessmentId: 'test-assessment',
+        selectedOptions: [
+          { questionId: 'q1', optionId: 'q1a2' }, // 1
+          { questionId: 'q2', optionId: 'q2a2' }, // 2
+          { questionId: 'q3', optionId: 'q3a2' }  // 2
         ]
       };
 
-      const result = service.calculateResults(quiz, response);
+      const result = service.calculateResults(assessment, selection);
 
       // Max: 3 + 5 + 4 = 12
       // User: 1 + 2 + 2 = 5
@@ -349,26 +349,26 @@ describe('QuizService', () => {
     });
   });
 
-  describe('createQuiz', () => {
-    it('should throw error when quiz has invalid metric references', async () => {
-      const invalidQuiz: Quiz = {
-        id: 'invalid-quiz',
-        title: 'Invalid Quiz',
+  describe('createAssessment', () => {
+    it('should throw error when assessment has invalid metric references', async () => {
+      const invalidAssessment: Assessment = {
+        id: 'invalid-assessment',
+        title: 'Invalid Assessment',
         description: 'Test',
         metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
         questions: [
           {
             id: 'q1',
             text: 'Question 1',
-            answers: [
+            options: [
               {
                 id: 'a1',
-                text: 'Answer 1',
+                text: 'Option 1',
                 metricScores: [{ metricId: 'invalid-metric', score: 5 }]
               },
               {
                 id: 'a2',
-                text: 'Answer 2',
+                text: 'Option 2',
                 metricScores: [{ metricId: 'm1', score: 3 }]
               }
             ]
@@ -376,30 +376,30 @@ describe('QuizService', () => {
         ]
       };
 
-      await expect(service.createQuiz(invalidQuiz)).rejects.toThrow('Quiz validation failed');
+      await expect(service.createAssessment(invalidAssessment)).rejects.toThrow('Assessment validation failed');
     });
   });
 
-  describe('updateQuiz', () => {
-    it('should throw error when quiz has invalid consistency', async () => {
-      const invalidQuiz: Quiz = {
-        id: 'invalid-quiz',
-        title: 'Invalid Quiz',
+  describe('updateAssessment', () => {
+    it('should throw error when assessment has invalid consistency', async () => {
+      const invalidAssessment: Assessment = {
+        id: 'invalid-assessment',
+        title: 'Invalid Assessment',
         description: 'Test',
         metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
         questions: [
           {
             id: 'q1',
             text: 'Question 1',
-            answers: [
+            options: [
               {
                 id: 'a1',
-                text: 'Answer 1',
+                text: 'Option 1',
                 metricScores: [{ metricId: 'wrong-metric', score: 5 }]
               },
               {
                 id: 'a2',
-                text: 'Answer 2',
+                text: 'Option 2',
                 metricScores: [{ metricId: 'm1', score: 3 }]
               }
             ]
@@ -407,31 +407,31 @@ describe('QuizService', () => {
         ]
       };
 
-      await expect(service.updateQuiz('test-id', invalidQuiz)).rejects.toThrow(
-        'Quiz validation failed'
+      await expect(service.updateAssessment('test-id', invalidAssessment)).rejects.toThrow(
+        'Assessment validation failed'
       );
     });
   });
 
-  describe('submitQuizResponse', () => {
-    const validQuiz: Quiz = {
-      id: 'test-quiz',
-      title: 'Test Quiz',
+  describe('submitAssessmentSelection', () => {
+    const validAssessment: Assessment = {
+      id: 'test-assessment',
+      title: 'Test Assessment',
       description: 'Test',
       metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
       questions: [
         {
           id: 'q1',
           text: 'Question 1',
-          answers: [
+          options: [
             {
               id: 'a1',
-              text: 'Answer 1',
+              text: 'Option 1',
               metricScores: [{ metricId: 'm1', score: 5 }]
             },
             {
               id: 'a2',
-              text: 'Answer 2',
+              text: 'Option 2',
               metricScores: [{ metricId: 'm1', score: 3 }]
             }
           ]
@@ -440,52 +440,52 @@ describe('QuizService', () => {
     };
 
     beforeEach(async () => {
-      await quizRepository.create(validQuiz);
+      await assessmentRepository.create(validAssessment);
     });
 
-    it('should throw error when quiz not found', async () => {
-      const response: QuizResponse = {
-        quizId: 'nonexistent-quiz',
-        answers: [{ questionId: 'q1', answerId: 'a1' }]
+    it('should throw error when assessment not found', async () => {
+      const selection: AssessmentSelection = {
+        assessmentId: 'nonexistent-assessment',
+        selectedOptions: [{ questionId: 'q1', optionId: 'a1' }]
       };
 
-      await expect(service.submitQuizResponse('nonexistent-quiz', response)).rejects.toThrow(
-        'Quiz not found'
+      await expect(service.submitAssessmentSelection('nonexistent-assessment', selection)).rejects.toThrow(
+        'Assessment not found'
       );
     });
 
-    it('should throw error when response has invalid question id', async () => {
-      const response: QuizResponse = {
-        quizId: 'test-quiz',
-        answers: [{ questionId: 'invalid-q', answerId: 'a1' }]
+    it('should throw error when selection has invalid question id', async () => {
+      const selection: AssessmentSelection = {
+        assessmentId: 'test-assessment',
+        selectedOptions: [{ questionId: 'invalid-q', optionId: 'a1' }]
       };
 
-      await expect(service.submitQuizResponse('test-quiz', response)).rejects.toThrow(
-        'Invalid quiz response'
+      await expect(service.submitAssessmentSelection('test-assessment', selection)).rejects.toThrow(
+        'Invalid assessment selection'
       );
     });
   });
 
   describe('calculateResults with invalid data', () => {
-    it('should handle invalid question id in response', () => {
-      const quiz: Quiz = {
-        id: 'test-quiz',
-        title: 'Test Quiz',
+    it('should handle invalid question id in selection', () => {
+      const assessment: Assessment = {
+        id: 'test-assessment',
+        title: 'Test Assessment',
         description: 'Test',
         metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
         questions: [
           {
             id: 'q1',
             text: 'Question 1',
-            answers: [
+            options: [
               {
                 id: 'a1',
-                text: 'Answer 1',
+                text: 'Option 1',
                 metricScores: [{ metricId: 'm1', score: 5 }]
               },
               {
                 id: 'a2',
-                text: 'Answer 2',
+                text: 'Option 2',
                 metricScores: [{ metricId: 'm1', score: 3 }]
               }
             ]
@@ -493,39 +493,39 @@ describe('QuizService', () => {
         ]
       };
 
-      const response: QuizResponse = {
-        quizId: 'test-quiz',
-        answers: [
-          { questionId: 'q1', answerId: 'a1' },
-          { questionId: 'invalid-question', answerId: 'a1' } // Invalid question
+      const selection: AssessmentSelection = {
+        assessmentId: 'test-assessment',
+        selectedOptions: [
+          { questionId: 'q1', optionId: 'a1' },
+          { questionId: 'invalid-question', optionId: 'a1' } // Invalid question
         ]
       };
 
-      const result = service.calculateResults(quiz, response);
+      const result = service.calculateResults(assessment, selection);
 
       // Should still calculate correctly, ignoring invalid question
       expect(result.metricScores[0].totalScore).toBe(5);
     });
 
-    it('should handle invalid answer id in response', () => {
-      const quiz: Quiz = {
-        id: 'test-quiz',
-        title: 'Test Quiz',
+    it('should handle invalid answer id in selection', () => {
+      const assessment: Assessment = {
+        id: 'test-assessment',
+        title: 'Test Assessment',
         description: 'Test',
         metrics: [{ id: 'm1', name: 'Metric 1', description: 'Test' }],
         questions: [
           {
             id: 'q1',
             text: 'Question 1',
-            answers: [
+            options: [
               {
                 id: 'a1',
-                text: 'Answer 1',
+                text: 'Option 1',
                 metricScores: [{ metricId: 'm1', score: 5 }]
               },
               {
                 id: 'a2',
-                text: 'Answer 2',
+                text: 'Option 2',
                 metricScores: [{ metricId: 'm1', score: 3 }]
               }
             ]
@@ -533,12 +533,12 @@ describe('QuizService', () => {
         ]
       };
 
-      const response: QuizResponse = {
-        quizId: 'test-quiz',
-        answers: [{ questionId: 'q1', answerId: 'invalid-answer' }] // Invalid answer
+      const selection: AssessmentSelection = {
+        assessmentId: 'test-assessment',
+        selectedOptions: [{ questionId: 'q1', optionId: 'invalid-answer' }] // Invalid answer
       };
 
-      const result = service.calculateResults(quiz, response);
+      const result = service.calculateResults(assessment, selection);
 
       // Should still calculate correctly, ignoring invalid answer
       expect(result.metricScores[0].totalScore).toBe(0);

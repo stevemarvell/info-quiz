@@ -1,17 +1,17 @@
 import { http, HttpResponse } from 'msw';
-import type { Quiz, QuizResult, ApiResponse } from '../types';
+import type { Assessment, AssessmentResult, ApiResponse } from '../shared/types';
 
 // Default mock data that can be overridden in tests
-export const mockQuizzes: Quiz[] = [
+export const mockAssessments: Assessment[] = [
   {
-    id: 'quiz-1',
+    id: 'assessment-1',
     title: 'Wellbeing Assessment',
-    description: 'A comprehensive wellbeing quiz',
+    description: 'A comprehensive wellbeing assessment',
     metrics: [{ id: 'm1', name: 'Physical Health', description: '' }],
     questions: []
   },
   {
-    id: 'quiz-2',
+    id: 'assessment-2',
     title: 'Mental Health Check',
     description: 'Quick mental health assessment',
     metrics: [{ id: 'm2', name: 'Mental Health', description: '' }],
@@ -19,10 +19,10 @@ export const mockQuizzes: Quiz[] = [
   }
 ];
 
-export const mockQuiz: Quiz = {
-  id: 'quiz-1',
-  title: 'Test Quiz',
-  description: 'A test quiz',
+export const mockAssessment: Assessment = {
+  id: 'assessment-1',
+  title: 'Test Assessment',
+  description: 'A test assessment',
   metrics: [
     { id: 'm1', name: 'Metric 1', description: 'First metric' }
   ],
@@ -30,24 +30,24 @@ export const mockQuiz: Quiz = {
     {
       id: 'q1',
       text: 'Question 1?',
-      answers: [
-        { id: 'a1', text: 'Answer 1', metricScores: [{ metricId: 'm1', score: 1 }] },
-        { id: 'a2', text: 'Answer 2', metricScores: [{ metricId: 'm1', score: 2 }] }
+      options: [
+        { id: 'o1', text: 'Option 1', metricScores: [{ metricId: 'm1', score: 1 }] },
+        { id: 'o2', text: 'Option 2', metricScores: [{ metricId: 'm1', score: 2 }] }
       ]
     },
     {
       id: 'q2',
       text: 'Question 2?',
-      answers: [
-        { id: 'a3', text: 'Answer 3', metricScores: [{ metricId: 'm1', score: 3 }] },
-        { id: 'a4', text: 'Answer 4', metricScores: [{ metricId: 'm1', score: 4 }] }
+      options: [
+        { id: 'o3', text: 'Option 3', metricScores: [{ metricId: 'm1', score: 3 }] },
+        { id: 'o4', text: 'Option 4', metricScores: [{ metricId: 'm1', score: 4 }] }
       ]
     }
   ]
 };
 
-export const mockResult: QuizResult = {
-  quizId: 'quiz-1',
+export const mockResult: AssessmentResult = {
+  assessmentId: 'assessment-1',
   metricScores: [
     {
       metricId: 'm1',
@@ -60,44 +60,25 @@ export const mockResult: QuizResult = {
 };
 
 // MSW handlers - mock at network level (Chicago/classicist approach)
+// Frontend only needs read and submit operations
 export const handlers = [
-  http.get('/api/quizzes', () => {
-    return HttpResponse.json<ApiResponse<Quiz[]>>({
+  http.get('/api/assessments', () => {
+    return HttpResponse.json<ApiResponse<Assessment[]>>({
       success: true,
-      data: mockQuizzes
+      data: mockAssessments
     });
   }),
-  http.get('/api/quizzes/:id', ({ params }) => {
+  http.get('/api/assessments/:id', ({ params }) => {
     const { id } = params;
-    return HttpResponse.json<ApiResponse<Quiz>>({
+    return HttpResponse.json<ApiResponse<Assessment>>({
       success: true,
-      data: { ...mockQuiz, id: id as string }
+      data: { ...mockAssessment, id: id as string }
     });
   }),
-  http.post('/api/quizzes/:id/responses', () => {
-    return HttpResponse.json<ApiResponse<QuizResult>>({
+  http.post('/api/assessments/:id/selections', () => {
+    return HttpResponse.json<ApiResponse<AssessmentResult>>({
       success: true,
       data: mockResult
-    });
-  }),
-  http.post('/api/quizzes', async ({ request }) => {
-    const quiz = await request.json() as Quiz;
-    return HttpResponse.json<ApiResponse<Quiz>>({
-      success: true,
-      data: quiz
-    }, { status: 201 });
-  }),
-  http.put('/api/quizzes/:id', async ({ request, params }) => {
-    const quiz = await request.json() as Quiz;
-    return HttpResponse.json<ApiResponse<Quiz>>({
-      success: true,
-      data: { ...quiz, id: params.id as string }
-    });
-  }),
-  http.delete('/api/quizzes/:id', () => {
-    return HttpResponse.json<ApiResponse<void>>({
-      success: true,
-      data: undefined
     });
   }),
 ];

@@ -6,7 +6,6 @@
       "jsx": true
     }
   },
-  "ignorePatterns": ["**/*.test.tsx", "**/__tests__/**"],
   "rules": {
     "react-hooks/exhaustive-deps": "warn",
     "@typescript-eslint/no-explicit-any": "warn",

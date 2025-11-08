@@ -47,4 +47,23 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Lint frontend
-        run: npm run lint --workspace=frontend --if-present
+        run: npm run lint --workspace=frontend
+
+  lint-admin:
+    name: Lint Admin
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Lint admin
+        run: npm run lint --workspace=admin

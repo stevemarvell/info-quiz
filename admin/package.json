@@ -1,7 +1,7 @@
 {
-  "name": "quiz-frontend",
+  "name": "assessment-admin",
   "version": "1.0.0",
-  "description": "Ionic React frontend for quiz metrics scoring app",
+  "description": "Ionic React admin interface for assessment management",
   "scripts": {
     "start": "vite",
     "build": "tsc && vite build",

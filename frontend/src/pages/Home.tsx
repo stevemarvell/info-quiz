@@ -13,46 +13,45 @@ import {
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { api } from '../services/api';
-import { Quiz } from '../types';
+import { Assessment } from '../shared/types';
 import { useToast } from '../hooks/useToast';
 
 const Home: React.FC = () => {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const history = useHistory();
   const { showError } = useToast();
 
   useEffect(() => {
-    loadQuizzes();
+    loadAssessments();
   }, []);
 
-  const loadQuizzes = async () => {
+  const loadAssessments = async () => {
     try {
-      const data = await api.getAllQuizzes();
-      setQuizzes(data);
+      const data = await api.getAllAssessments();
+      setAssessments(data);
     } catch (error) {
-      // Error handled by toast notification
-      showError('Failed to load quizzes');
+      showError('Failed to load assessments');
     } finally {
       setLoading(false);
     }
   };
 
-  const startQuiz = (quizId: string) => {
-    history.push(`/quiz/${quizId}`);
+  const startAssessment = (assessmentId: string) => {
+    history.push(`/assessment/${assessmentId}`);
   };
 
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Available Quizzes</IonTitle>
+          <IonTitle>Available Assessments</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
         <IonHeader collapse="condense">
           <IonToolbar>
-            <IonTitle size="large">Available Quizzes</IonTitle>
+            <IonTitle size="large">Available Assessments</IonTitle>
           </IonToolbar>
         </IonHeader>
         {loading ? (
@@ -61,19 +60,19 @@ const Home: React.FC = () => {
           </div>
         ) : (
           <IonList>
-            {quizzes.length === 0 ? (
+            {assessments.length === 0 ? (
               <IonItem>
-                <IonLabel>No quizzes available</IonLabel>
+                <IonLabel>No assessments available</IonLabel>
               </IonItem>
             ) : (
-              quizzes.map(quiz => (
-                <IonItem key={quiz.id}>
+              assessments.map(assessment => (
+                <IonItem key={assessment.id}>
                   <IonLabel>
-                    <h2>{quiz.title}</h2>
-                    <p>{quiz.description}</p>
-                    <p>{quiz.questions.length} questions</p>
+                    <h2>{assessment.title}</h2>
+                    <p>{assessment.description}</p>
+                    <p>{assessment.questions.length} questions</p>
                   </IonLabel>
-                  <IonButton onClick={() => startQuiz(quiz.id)}>Start</IonButton>
+                  <IonButton onClick={() => startAssessment(assessment.id)}>Start</IonButton>
                 </IonItem>
               ))
             )}
