@@ -2,29 +2,29 @@ import { z } from 'zod';
 import {
   MetricSchema,
   MetricScoreSchema,
-  AnswerSchema,
+  OptionSchema,
   QuestionSchema,
-  QuizSchema,
-  QuizAnswerSchema,
-  QuizResponseSchema,
+  AssessmentSchema,
+  SelectedOptionSchema,
+  AssessmentSelectionSchema,
   MetricResultSchema,
-  QuizResultSchema,
-  CreateQuizSchema,
-  UpdateQuizSchema
+  AssessmentResultSchema,
+  CreateAssessmentSchema,
+  UpdateAssessmentSchema
 } from './schemas';
 
 // Infer TypeScript types from Zod schemas
 export type Metric = z.infer<typeof MetricSchema>;
 export type MetricScore = z.infer<typeof MetricScoreSchema>;
-export type Answer = z.infer<typeof AnswerSchema>;
+export type Option = z.infer<typeof OptionSchema>;
 export type Question = z.infer<typeof QuestionSchema>;
-export type Quiz = z.infer<typeof QuizSchema>;
-export type QuizAnswer = z.infer<typeof QuizAnswerSchema>;
-export type QuizResponse = z.infer<typeof QuizResponseSchema>;
+export type Assessment = z.infer<typeof AssessmentSchema>;
+export type SelectedOption = z.infer<typeof SelectedOptionSchema>;
+export type AssessmentSelection = z.infer<typeof AssessmentSelectionSchema>;
 export type MetricResult = z.infer<typeof MetricResultSchema>;
-export type QuizResult = z.infer<typeof QuizResultSchema>;
-export type CreateQuiz = z.infer<typeof CreateQuizSchema>;
-export type UpdateQuiz = z.infer<typeof UpdateQuizSchema>;
+export type AssessmentResult = z.infer<typeof AssessmentResultSchema>;
+export type CreateAssessment = z.infer<typeof CreateAssessmentSchema>;
+export type UpdateAssessment = z.infer<typeof UpdateAssessmentSchema>;
 
 // Error types
 export interface ApiError {

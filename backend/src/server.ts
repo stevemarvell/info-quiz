@@ -3,9 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { createRouter } from './routes';
-import { InMemoryQuizRepository } from './repositories/InMemoryQuizRepository';
-import { InMemoryQuizResponseRepository } from './repositories/InMemoryQuizResponseRepository';
-import { QuizService } from './services/QuizService';
+import { InMemoryAssessmentRepository } from './repositories/InMemoryAssessmentRepository';
+import { InMemoryAssessmentSelectionRepository } from './repositories/InMemoryAssessmentSelectionRepository';
+import { AssessmentService } from './services/AssessmentService';
 import { initializeSampleData } from './sampleData';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { sanitizeInput } from './middleware/sanitization';
@@ -82,15 +82,15 @@ app.use((req, res, next) => {
 });
 
 // Dependency injection setup
-const quizRepository = new InMemoryQuizRepository();
-const responseRepository = new InMemoryQuizResponseRepository();
-const quizService = new QuizService(quizRepository, responseRepository);
+const assessmentRepository = new InMemoryAssessmentRepository();
+const selectionRepository = new InMemoryAssessmentSelectionRepository();
+const assessmentService = new AssessmentService(assessmentRepository, selectionRepository);
 
 // Initialize sample data
-initializeSampleData(quizRepository);
+initializeSampleData(assessmentRepository);
 
 // Routes
-const router = createRouter(quizService);
+const router = createRouter(assessmentService);
 app.use('/api', router);
 
 // Health check (with rate limiting)
@@ -124,4 +124,4 @@ process.on('SIGTERM', () => {
   });
 });
 
-export { app, quizRepository, responseRepository, quizService };
+export { app, assessmentRepository, selectionRepository, assessmentService };

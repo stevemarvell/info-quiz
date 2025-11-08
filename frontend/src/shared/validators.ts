@@ -1,17 +1,17 @@
 import { z, ZodError, ZodSchema } from 'zod';
 import {
-  QuizSchema,
-  QuizResponseSchema,
-  CreateQuizSchema,
-  UpdateQuizSchema,
+  AssessmentSchema,
+  AssessmentSelectionSchema,
+  CreateAssessmentSchema,
+  UpdateAssessmentSchema,
   MetricSchema,
   QuestionSchema
 } from './schemas';
-import { Quiz, QuizResponse, Metric, Question } from './types';
+import { Assessment, AssessmentSelection, Metric, Question } from './types';
 
 // Infer types from schemas
-export type CreateQuizInput = z.infer<typeof CreateQuizSchema>;
-export type UpdateQuizInput = z.infer<typeof UpdateQuizSchema>;
+export type CreateAssessmentInput = z.infer<typeof CreateAssessmentSchema>;
+export type UpdateAssessmentInput = z.infer<typeof UpdateAssessmentSchema>;
 
 export interface ValidationResult<T> {
   success: boolean;
@@ -44,20 +44,20 @@ export class Validator {
     }
   }
 
-  static validateQuiz(data: unknown): ValidationResult<Quiz> {
-    return this.validate(QuizSchema, data);
+  static validateAssessment(data: unknown): ValidationResult<Assessment> {
+    return this.validate(AssessmentSchema, data);
   }
 
-  static validateCreateQuiz(data: unknown): ValidationResult<CreateQuizInput> {
-    return this.validate(CreateQuizSchema, data);
+  static validateCreateAssessment(data: unknown): ValidationResult<CreateAssessmentInput> {
+    return this.validate(CreateAssessmentSchema, data);
   }
 
-  static validateUpdateQuiz(data: unknown): ValidationResult<UpdateQuizInput> {
-    return this.validate(UpdateQuizSchema, data);
+  static validateUpdateAssessment(data: unknown): ValidationResult<UpdateAssessmentInput> {
+    return this.validate(UpdateAssessmentSchema, data);
   }
 
-  static validateQuizResponseSchema(data: unknown): ValidationResult<QuizResponse> {
-    return this.validate(QuizResponseSchema, data);
+  static validateAssessmentSelectionSchema(data: unknown): ValidationResult<AssessmentSelection> {
+    return this.validate(AssessmentSelectionSchema, data);
   }
 
   static validateMetric(data: unknown): ValidationResult<Metric> {
@@ -69,18 +69,18 @@ export class Validator {
   }
 
   // Business logic validations
-  static validateQuizConsistency(quiz: Quiz): { valid: boolean; errors: string[] } {
+  static validateAssessmentConsistency(assessment: Assessment): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    // Check that all metric IDs in answers are valid
-    const metricIds = new Set(quiz.metrics.map(m => m.id));
+    // Check that all metric IDs in options are valid
+    const metricIds = new Set(assessment.metrics.map(m => m.id));
 
-    for (const question of quiz.questions) {
-      for (const answer of question.answers) {
-        for (const metricScore of answer.metricScores) {
+    for (const question of assessment.questions) {
+      for (const option of question.options) {
+        for (const metricScore of option.metricScores) {
           if (!metricIds.has(metricScore.metricId)) {
             errors.push(
-              `Answer "${answer.id}" references non-existent metric "${metricScore.metricId}"`
+              `Option "${option.id}" references non-existent metric "${metricScore.metricId}"`
             );
           }
         }
@@ -88,7 +88,7 @@ export class Validator {
     }
 
     // Check for duplicate question IDs
-    const questionIds = quiz.questions.map(q => q.id);
+    const questionIds = assessment.questions.map(q => q.id);
     const duplicateQuestions = questionIds.filter(
       (id: string, index: number) => questionIds.indexOf(id) !== index
     );
@@ -96,15 +96,15 @@ export class Validator {
       errors.push(`Duplicate question IDs found: ${duplicateQuestions.join(', ')}`);
     }
 
-    // Check for duplicate answer IDs within each question
-    for (const question of quiz.questions) {
-      const answerIds = question.answers.map(a => a.id);
-      const duplicateAnswers = answerIds.filter(
-        (id: string, index: number) => answerIds.indexOf(id) !== index
+    // Check for duplicate option IDs within each question
+    for (const question of assessment.questions) {
+      const optionIds = question.options.map(o => o.id);
+      const duplicateOptions = optionIds.filter(
+        (id: string, index: number) => optionIds.indexOf(id) !== index
       );
-      if (duplicateAnswers.length > 0) {
+      if (duplicateOptions.length > 0) {
         errors.push(
-          `Duplicate answer IDs found in question '${question.text}': ${duplicateAnswers.join(', ')}`
+          `Duplicate option IDs found in question '${question.text}': ${duplicateOptions.join(', ')}`
         );
       }
     }
@@ -115,32 +115,32 @@ export class Validator {
     };
   }
 
-  static validateQuizResponseConsistency(quiz: Quiz, response: QuizResponse): { valid: boolean; errors: string[] } {
+  static validateAssessmentSelectionConsistency(assessment: Assessment, selection: AssessmentSelection): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    const questionIds = new Set(quiz.questions.map(q => q.id));
-    const questionAnswerMap = new Map<string, Set<string>>(
-      quiz.questions.map(q => [q.id, new Set(q.answers.map(a => a.id))])
+    const questionIds = new Set(assessment.questions.map(q => q.id));
+    const questionOptionMap = new Map<string, Set<string>>(
+      assessment.questions.map(q => [q.id, new Set(q.options.map(o => o.id))])
     );
 
-    for (const answer of response.answers) {
+    for (const selectedOpt of selection.selectedOptions) {
       // Check if question exists
-      if (!questionIds.has(answer.questionId)) {
-        errors.push(`Invalid question ID: ${answer.questionId}`);
+      if (!questionIds.has(selectedOpt.questionId)) {
+        errors.push(`Invalid question ID: ${selectedOpt.questionId}`);
         continue;
       }
 
-      // Check if answer belongs to question
-      const validAnswers = questionAnswerMap.get(answer.questionId);
-      if (validAnswers && !validAnswers.has(answer.answerId)) {
+      // Check if option belongs to question
+      const validOptions = questionOptionMap.get(selectedOpt.questionId);
+      if (validOptions && !validOptions.has(selectedOpt.optionId)) {
         errors.push(
-          `Answer "${answer.answerId}" is not valid for question "${answer.questionId}"`
+          `Option "${selectedOpt.optionId}" is not valid for question "${selectedOpt.questionId}"`
         );
       }
     }
 
     // Check if all questions are answered
-    const answeredQuestions = new Set(response.answers.map(a => a.questionId));
+    const answeredQuestions = new Set(selection.selectedOptions.map(s => s.questionId));
     for (const questionId of questionIds) {
       if (!answeredQuestions.has(questionId)) {
         errors.push(`Question "${questionId}" was not answered`);

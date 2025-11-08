@@ -6,9 +6,9 @@ import {
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 
-import Home from './pages/Home';
-import TakeAssessment from './pages/TakeAssessment';
-import AssessmentResults from './pages/AssessmentResults';
+import AssessmentList from './pages/AssessmentList';
+import AssessmentCreate from './pages/AssessmentCreate';
+import AssessmentEdit from './pages/AssessmentEdit';
 
 import '@ionic/react/css/core.css';
 import '@ionic/react/css/normalize.css';
@@ -28,13 +28,13 @@ const App: React.FC = () => (
     <IonReactRouter>
       <IonRouterOutlet>
         <Route exact path="/">
-          <Home />
+          <AssessmentList />
         </Route>
-        <Route exact path="/assessment/:id">
-          <TakeAssessment />
+        <Route exact path="/create">
+          <AssessmentCreate />
         </Route>
-        <Route exact path="/results/:assessmentId">
-          <AssessmentResults />
+        <Route exact path="/edit/:id">
+          <AssessmentEdit />
         </Route>
         <Route exact path="/index.html">
           <Redirect to="/" />

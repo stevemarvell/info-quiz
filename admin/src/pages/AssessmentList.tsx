@@ -17,28 +17,27 @@ import {
 import { add, create, trash } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { api } from '../services/api';
-import { Quiz } from '../types';
+import { Assessment } from '../shared/types';
 import { useToast } from '../hooks/useToast';
 
-const AdminQuizList: React.FC = () => {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+const AssessmentList: React.FC = () => {
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [deleteQuizId, setDeleteQuizId] = useState<string>('');
+  const [deleteAssessmentId, setDeleteAssessmentId] = useState<string>('');
   const history = useHistory();
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
-    loadQuizzes();
+    loadAssessments();
   }, []);
 
-  const loadQuizzes = async () => {
+  const loadAssessments = async () => {
     try {
-      const data = await api.getAllQuizzes();
-      setQuizzes(data);
+      const data = await api.getAllAssessments();
+      setAssessments(data);
     } catch (error) {
-      // Error handled by toast notification
-      showError('Failed to load quizzes');
+      showError('Failed to load assessments');
     } finally {
       setLoading(false);
     }
@@ -46,13 +45,12 @@ const AdminQuizList: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      await api.deleteQuiz(deleteQuizId);
-      showSuccess('Quiz deleted successfully!');
-      await loadQuizzes();
+      await api.deleteAssessment(deleteAssessmentId);
+      showSuccess('Assessment deleted successfully!');
+      await loadAssessments();
       setShowDeleteAlert(false);
     } catch (error) {
-      // Error handled by toast notification
-      showError('Failed to delete quiz');
+      showError('Failed to delete assessment');
     }
   };
 
@@ -60,11 +58,11 @@ const AdminQuizList: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Admin - Quiz Management</IonTitle>
+          <IonTitle>Assessment Management</IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={() => history.push('/admin/create')}>
+            <IonButton onClick={() => history.push('/create')}>
               <IonIcon icon={add} />
-              Create Quiz
+              Create Assessment
             </IonButton>
           </IonButtons>
         </IonToolbar>
@@ -76,25 +74,25 @@ const AdminQuizList: React.FC = () => {
           </div>
         ) : (
           <IonList>
-            {quizzes.length === 0 ? (
+            {assessments.length === 0 ? (
               <IonItem>
-                <IonLabel>No quizzes created yet</IonLabel>
+                <IonLabel>No assessments created yet</IonLabel>
               </IonItem>
             ) : (
-              quizzes.map(quiz => (
-                <IonItem key={quiz.id}>
+              assessments.map(assessment => (
+                <IonItem key={assessment.id}>
                   <IonLabel>
-                    <h2>{quiz.title}</h2>
-                    <p>{quiz.description}</p>
-                    <p>{quiz.questions.length} questions, {quiz.metrics.length} metrics</p>
+                    <h2>{assessment.title}</h2>
+                    <p>{assessment.description}</p>
+                    <p>{assessment.questions.length} questions, {assessment.metrics.length} metrics</p>
                   </IonLabel>
-                  <IonButton onClick={() => history.push(`/admin/edit/${quiz.id}`)}>
+                  <IonButton onClick={() => history.push(`/edit/${assessment.id}`)}>
                     <IonIcon icon={create} />
                   </IonButton>
                   <IonButton
                     color="danger"
                     onClick={() => {
-                      setDeleteQuizId(quiz.id);
+                      setDeleteAssessmentId(assessment.id);
                       setShowDeleteAlert(true);
                     }}
                   >
@@ -108,8 +106,8 @@ const AdminQuizList: React.FC = () => {
         <IonAlert
           isOpen={showDeleteAlert}
           onDidDismiss={() => setShowDeleteAlert(false)}
-          header="Delete Quiz"
-          message="Are you sure you want to delete this quiz?"
+          header="Delete Assessment"
+          message="Are you sure you want to delete this assessment?"
           buttons={[
             {
               text: 'Cancel',
@@ -126,4 +124,4 @@ const AdminQuizList: React.FC = () => {
   );
 };
 
-export default AdminQuizList;
+export default AssessmentList;

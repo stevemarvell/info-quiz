@@ -1,10 +1,10 @@
-import { IQuizRepository } from './repositories/IQuizRepository';
-import { Quiz } from './shared';
+import { IAssessmentRepository } from './repositories/IAssessmentRepository';
+import { Assessment } from './shared';
 import { logger } from './utils/logger';
 
-export function initializeSampleData(quizRepository: IQuizRepository) {
-  const wellbeingQuiz: Quiz = {
-    id: 'wellbeing-quiz-1',
+export function initializeSampleData(assessmentRepository: IAssessmentRepository) {
+  const wellbeingAssessment: Assessment = {
+    id: 'wellbeing-assessment-1',
     title: 'Wellbeing Assessment',
     description: 'Assess your overall wellbeing across multiple dimensions',
     metrics: [
@@ -38,7 +38,7 @@ export function initializeSampleData(quizRepository: IQuizRepository) {
       {
         id: 'q1',
         text: 'How would you rate your sleep quality?',
-        answers: [
+        options: [
           {
             id: 'q1a1',
             text: 'Excellent - I sleep well and wake refreshed',
@@ -68,7 +68,7 @@ export function initializeSampleData(quizRepository: IQuizRepository) {
       {
         id: 'q2',
         text: 'How often do you engage in physical exercise?',
-        answers: [
+        options: [
           {
             id: 'q2a1',
             text: 'Daily or almost every day',
@@ -98,7 +98,7 @@ export function initializeSampleData(quizRepository: IQuizRepository) {
       {
         id: 'q3',
         text: 'How do you feel about your stress levels?',
-        answers: [
+        options: [
           {
             id: 'q3a1',
             text: 'Well-managed and under control',
@@ -128,7 +128,7 @@ export function initializeSampleData(quizRepository: IQuizRepository) {
       {
         id: 'q4',
         text: 'How connected do you feel to friends and family?',
-        answers: [
+        options: [
           {
             id: 'q4a1',
             text: 'Very connected with regular meaningful interactions',
@@ -158,7 +158,7 @@ export function initializeSampleData(quizRepository: IQuizRepository) {
       {
         id: 'q5',
         text: 'Do you feel a sense of purpose in your daily activities?',
-        answers: [
+        options: [
           {
             id: 'q5a1',
             text: 'Yes, my days feel meaningful and purposeful',
@@ -188,7 +188,7 @@ export function initializeSampleData(quizRepository: IQuizRepository) {
       {
         id: 'q6',
         text: 'How comfortable are you with your current financial situation?',
-        answers: [
+        options: [
           {
             id: 'q6a1',
             text: 'Very comfortable and secure',
@@ -218,7 +218,7 @@ export function initializeSampleData(quizRepository: IQuizRepository) {
       {
         id: 'q7',
         text: 'How would you describe your eating habits?',
-        answers: [
+        options: [
           {
             id: 'q7a1',
             text: 'Balanced and nutritious most of the time',
@@ -248,7 +248,7 @@ export function initializeSampleData(quizRepository: IQuizRepository) {
       {
         id: 'q8',
         text: 'Do you engage in hobbies or activities you enjoy?',
-        answers: [
+        options: [
           {
             id: 'q8a1',
             text: 'Yes, regularly',
@@ -281,7 +281,7 @@ export function initializeSampleData(quizRepository: IQuizRepository) {
       {
         id: 'q9',
         text: 'How satisfied are you with your work-life balance?',
-        answers: [
+        options: [
           {
             id: 'q9a1',
             text: 'Very satisfied',
@@ -314,7 +314,7 @@ export function initializeSampleData(quizRepository: IQuizRepository) {
       {
         id: 'q10',
         text: 'How often do you practice mindfulness or relaxation techniques?',
-        answers: [
+        options: [
           {
             id: 'q10a1',
             text: 'Daily practice',
@@ -347,6 +347,6 @@ export function initializeSampleData(quizRepository: IQuizRepository) {
     ]
   };
 
-  quizRepository.create(wellbeingQuiz);
-  logger.info('Sample wellbeing quiz created');
+  assessmentRepository.create(wellbeingAssessment);
+  logger.info('Sample wellbeing assessment created');
 }
